@@ -1,0 +1,645 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>自动化测试</title>
+  <subtitle>不二家的小球童的测试之路</subtitle>
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://yoursite.com/"/>
+  <updated>2016-11-04T07:36:48.000Z</updated>
+  <id>http://yoursite.com/</id>
+  
+  <author>
+    <name>diaojunxian</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>持续集成实施(八)</title>
+    <link href="http://yoursite.com/2016/11/04/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E5%AE%9E%E6%96%BD-%E5%85%AB/"/>
+    <id>http://yoursite.com/2016/11/04/持续集成实施-八/</id>
+    <published>2016-11-04T07:25:24.000Z</published>
+    <updated>2016-11-04T07:36:48.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>上接遇到的奇怪需求和其他问题。。。。。</p>
+<hr>
+<h3 id="7、优化预警提醒"><a href="#7、优化预警提醒" class="headerlink" title="7、优化预警提醒"></a>7、优化预警提醒</h3><p>需求：其实需求也是蛮简单的需要告警信息更加及时可靠，之前的折中方案是，将console output log全部通过邮件推送到我个人邮箱，但是还是显得不及时，因为邮件浏览非常不及时，现在我们的交流工具主要是slack，故而集成到slack即好。<br>解决方案：借助requests auth获取jenkins console output log，借助slack web api推送到个人或者channel，借助jenkins插件<code>Execute a set of scripts</code>在job执行出错时候，预警。<br>看脚本:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">#获取jenkins output log</div><div class="line">def get_content(job_url):</div><div class="line">    &quot;&quot;&quot;取出console log全部内容&quot;&quot;&quot;</div><div class="line">    url = job_url + &quot;consoleText/api/json&quot;</div><div class="line">    headers = &#123;</div><div class="line">    	&quot;Content-Type&quot;: &quot;application/json&quot;,</div><div class="line">    	&quot;Accept&quot;: &quot;application/json&quot;</div><div class="line">    &#125;</div><div class="line">    response = requests.get(url, auth=(&quot;xxxx&quot;, &quot;xxxxx&quot;))</div><div class="line">    assert response.status_code == requests.codes.ok</div><div class="line">    return response.content</div></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">#借助slack推送个人或者channel</div><div class="line">slack web api地址：https://api.slack.com/methods/chat.postMessage</div><div class="line">slack = Slacker(api_token, 100)</div><div class="line">slack.chat.post_message(userid, text=text, attachments=data)</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">添加execute a set of scripts并且勾选Execute script only if builds fails</div></pre></td></tr></table></figure>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;上接遇到的奇怪需求和其他问题。。。。。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h3 id=&quot;7、优化预警提醒&quot;&gt;&lt;a href=&quot;#7、优化预警提醒&quot; class=&quot;headerlink&quot; title=&quot;7、优化预警提醒&quot;&gt;&lt;/a&gt;7、优化预警提醒&lt;/h3&gt;&lt;p&gt;需求：其实需求也是蛮简单的需
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>持续集成实施(七)</title>
+    <link href="http://yoursite.com/2016/10/21/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E5%AE%9E%E6%96%BD-%E4%B8%83/"/>
+    <id>http://yoursite.com/2016/10/21/持续集成实施-七/</id>
+    <published>2016-10-21T03:40:42.000Z</published>
+    <updated>2016-10-31T12:23:09.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>从此贴开始整理工作中遇到的奇怪需求和奇怪问题。。。。</p>
+<hr>
+<h3 id="1、同时出adhoc和appstore包"><a href="#1、同时出adhoc和appstore包" class="headerlink" title="1、同时出adhoc和appstore包"></a>1、同时出adhoc和appstore包</h3><p>需求：满足发布iOS版本的时候同时出adhoc和appstore包<br>解决：使用gym出archive版本，然后用两种exoptionplist同时出ipa包。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">DEVELOPER_DIR=&quot;/Applications/Xcode.app&quot; xcodebuild -exportArchive </div><div class="line">-archivePath $&#123;archive_path&#125; </div><div class="line">-exportPath $&#123;ipa_name_adhoc&#125; </div><div class="line">-exportOptionsPlist $&#123;ExoptionPlist_adhoc&#125;</div></pre></td></tr></table></figure></p>
+<p>遇到问题：appstore包可以正常出，但是adhoc包出不来failed，报错提示为:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">DEDistribution: Step failed: &lt;IDEDistributionThinningStep: 0x7fda446c5d90&gt;:</div><div class="line">Error Domain=IDEDistributionErrorDomain Code=14 &quot;No applicable devices found.&quot; </div><div class="line">UserInfo=0x7fda44b61b80 &#123;NSLocalizedDescription=No applicable devices found.&#125;</div><div class="line">error: exportArchive: No applicable devices found.</div></pre></td></tr></table></figure></p>
+<p>问题解决：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">sudo gem install CFPropertyList</div><div class="line">rvm use system</div></pre></td></tr></table></figure></p>
+<p>期间可能会遇到fastlane命令失效的情况，重装fastlane即可。注意<code>rvm use system</code>之前需要通过<code>rvm list</code>验证一下，如果有多个ruby版本可以删除不需要的版本，通过<code>sudo remove ruby xxxx</code>进行。</p>
+<hr>
+<h3 id="2、优化git-parameter同步分支和TAG速度"><a href="#2、优化git-parameter同步分支和TAG速度" class="headerlink" title="2、优化git parameter同步分支和TAG速度"></a>2、优化git parameter同步分支和TAG速度</h3><p>需求：使用git parameter同步分支和TAG速度太慢，而且最重要的是git parameter不支持Multiple SCMs来拉取代码。<br>解决：使用插件Dynamic Choice Parameter，并加入groovy脚本<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">#!/usr/bin/groovy</div><div class="line">def gettags = (&quot;git ls-remote -h 【git repo地址】&quot;).execute()</div><div class="line">text = gettags.in.text.readLines()</div><div class="line">branch = text.collect&#123;it.split()[1]&#125;</div><div class="line">//这里的branch可以随意匹配，我这里是为了只取branch，去掉包含sandbox分支</div><div class="line">branch_text = branch.grep(~/refs\/heads.*/).grep(~/^((?!(sandbox)).)*$/)</div><div class="line">.collect&#123;el-&gt;el.replaceAll(&quot;refs/heads/&quot;, &quot;&quot;)&#125;</div><div class="line">branch_text.unique()</div></pre></td></tr></table></figure></p>
+<p>遇到问题：对groovy的正则匹配使用不熟悉，感觉groovy作为脚本语言，的确使用上更加便捷，对于groovy的语法，可以参考<a href="https://my.oschina.net/wstone/blog/389449。" target="_blank" rel="external">https://my.oschina.net/wstone/blog/389449。</a></p>
+<hr>
+<h3 id="3、jenkins执行ruby-v和slave上执行ruby-v版本不一致"><a href="#3、jenkins执行ruby-v和slave上执行ruby-v版本不一致" class="headerlink" title="3、jenkins执行ruby -v和slave上执行ruby -v版本不一致"></a>3、jenkins执行ruby -v和slave上执行ruby -v版本不一致</h3><p>问题：jenkins上执行pilot upload -d一直提示没有这个参数，但是本地执行却没有报错。<br>分析：出现的原因可能是之前执行过一句话：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">rvm use system</div></pre></td></tr></table></figure></p>
+<p>现象是jenkins执行ruby -v是2.2.0版本，然后我在slave上执行rvm list，看不到ruby 2.2.0的版本，只交代最后的解决的过程，其他不表了。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">只要在执行slave上打包命令之前加上</div><div class="line">#!/bin/bash -xl</div></pre></td></tr></table></figure></p>
+<h3 id="4、jenkins执行gradlew打包，虽然BUILD-FAILED，但是结果仍然是SUCCESS"><a href="#4、jenkins执行gradlew打包，虽然BUILD-FAILED，但是结果仍然是SUCCESS" class="headerlink" title="4、jenkins执行gradlew打包，虽然BUILD FAILED，但是结果仍然是SUCCESS"></a>4、jenkins执行gradlew打包，虽然BUILD FAILED，但是结果仍然是SUCCESS</h3><p>需求：在构建任务过程中，如若出现BUILD FAILED，则告知打包是失败的。<br>解决：使用插件Jenkins Text Finder<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">勾选Also serach the console output</div><div class="line">Regular expression 填写BUILD FAILED</div></pre></td></tr></table></figure></p>
+<p>这样就能把构建失败的结果告知出来。</p>
+<hr>
+<h3 id="5、在使用python-flask模块过程中，已经安装了flask库的情况下，依然有报错"><a href="#5、在使用python-flask模块过程中，已经安装了flask库的情况下，依然有报错" class="headerlink" title="5、在使用python flask模块过程中，已经安装了flask库的情况下，依然有报错"></a>5、在使用python flask模块过程中，已经安装了flask库的情况下，依然有报错</h3><p>报错提示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">Traceback (most recent call last):</div><div class="line">  File &quot;test.py&quot;, line 1, in &lt;module&gt;</div><div class="line">    from flask import Flask</div><div class="line">  File &quot;/home/pi/programs/flask.py&quot;, line 1, in &lt;module&gt;</div><div class="line">    from flask import Flask</div><div class="line">ImportError: cannot import name Flask</div></pre></td></tr></table></figure></p>
+<p>解决：让我对pyc有了稍微深的一点理解，我的python也不到家，需要补的东西太多，时间不够，继续努力吧。。。。。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Delete your local files that you named flask.py flask.pyc</div></pre></td></tr></table></figure></p>
+<hr>
+<h3 id="6、需要配置一个可以让外网访问的端口号"><a href="#6、需要配置一个可以让外网访问的端口号" class="headerlink" title="6、需要配置一个可以让外网访问的端口号"></a>6、需要配置一个可以让外网访问的端口号</h3><p>(1)检查端口是否打开，以<code>8000</code>为例：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">telnet 127.0.0.1 8000</div></pre></td></tr></table></figure></p>
+<p>(2)检查linux版本：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">lsb_release -a</div></pre></td></tr></table></figure></p>
+<p>(3)确认debian版本添加开启端口号：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">sudo iptables -A INPUT -p tcp --dport 8000 --jump ACCEPT</div><div class="line">iptables-save</div></pre></td></tr></table></figure></p>
+<p>(4)隐藏执行python flask命令：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">gunicorn router:app -p router.pid -b 0.0.0.0:8000 -D</div></pre></td></tr></table></figure></p>
+<p>(5)取到pid，并kill应用进程：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">cd workspace</div><div class="line">cat router.pid</div><div class="line">kill `cat router.pid`</div></pre></td></tr></table></figure></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;从此贴开始整理工作中遇到的奇怪需求和奇怪问题。。。。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h3 id=&quot;1、同时出adhoc和appstore包&quot;&gt;&lt;a href=&quot;#1、同时出adhoc和appstore包&quot; class=&quot;headerlink&quot; title=&quot;1、同时出adhoc和ap
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>持续集成实施(六)</title>
+    <link href="http://yoursite.com/2016/10/18/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E5%AE%9E%E6%96%BD-%E5%85%AD/"/>
+    <id>http://yoursite.com/2016/10/18/持续集成实施-六/</id>
+    <published>2016-10-18T07:22:26.000Z</published>
+    <updated>2016-10-21T03:48:42.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>今天遇到了一个非常变态的问题，所有涉及到操作缓存文件的都有提示<code>operation not permitted</code>。找了很多的解决方案，简单记述一下折腾的过程。</p>
+<hr>
+<h3 id="怀疑与bundler有关？"><a href="#怀疑与bundler有关？" class="headerlink" title="怀疑与bundler有关？"></a>怀疑与bundler有关？</h3><p>主要原因是之前出过很多次环境问题，都跟bundler有关，而且它是安装ruby包的必须插件，但是排查许久，也不能确定修改哪里可以解决，直到看到了一篇文章，说是因为需要修改<code>.bundle/config</code>，但是找不到这个目录作罢。</p>
+<h3 id="确定是El-Capitan-加入了Rootless机制，设置-root-权限也不行。"><a href="#确定是El-Capitan-加入了Rootless机制，设置-root-权限也不行。" class="headerlink" title="确定是El Capitan 加入了Rootless机制，设置 root 权限也不行。"></a>确定是El Capitan 加入了Rootless机制，设置 root 权限也不行。</h3><p>于是尝试关闭 Rootless。重启按住 Command+R，进入恢复模式，打开Terminal。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">csrutil disable</div></pre></td></tr></table></figure></p>
+<p>重启即可。如果要恢复默认，那么<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">csrutil enable</div></pre></td></tr></table></figure></p>
+<h3 id="遇到新问题SSL-connect-returned-1-errno-0-state-SSLv3-read-server-certificate-B-certificate-verify-failed"><a href="#遇到新问题SSL-connect-returned-1-errno-0-state-SSLv3-read-server-certificate-B-certificate-verify-failed" class="headerlink" title="遇到新问题SSL_connect returned=1 errno=0 state=SSLv3 read server certificate B: certificate verify failed"></a>遇到新问题<code>SSL_connect returned=1 errno=0 state=SSLv3 read server certificate B: certificate verify failed</code></h3><p>解决：简单讲升级ruby即可<br>1、安装rvm<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">curl -L https://get.rvm.io | bash -s stable</div><div class="line">source ~/.rvm/scripts/rvm</div></pre></td></tr></table></figure></p>
+<p>2、安装ruby<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">rvm install 2.3.1 --disable-binary</div></pre></td></tr></table></figure></p>
+<p>3、安装bundler升级gem<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">gem install bundler -v 1.13.4</div><div class="line">sudo gem update --system</div></pre></td></tr></table></figure></p>
+<p>4、安装fastlane<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo gem install fastlane</div></pre></td></tr></table></figure></p>
+<p>5、默认ruby版本<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">rvm 2.2.1 --default</div></pre></td></tr></table></figure></p>
+<h3 id="总结一下遇到问题不能慌，慌也没用。。。。"><a href="#总结一下遇到问题不能慌，慌也没用。。。。" class="headerlink" title="总结一下遇到问题不能慌，慌也没用。。。。"></a>总结一下遇到问题不能慌，慌也没用。。。。</h3>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;今天遇到了一个非常变态的问题，所有涉及到操作缓存文件的都有提示&lt;code&gt;operation not permitted&lt;/code&gt;。找了很多的解决方案，简单记述一下折腾的过程。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h3 id=&quot;怀疑与bundler有关？&quot;&gt;&lt;a href=&quot;#怀疑与b
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>持续集成实施(五)</title>
+    <link href="http://yoursite.com/2016/10/10/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E5%AE%9E%E6%96%BD-%E4%BA%94/"/>
+    <id>http://yoursite.com/2016/10/10/持续集成实施-五/</id>
+    <published>2016-10-10T09:14:43.000Z</published>
+    <updated>2016-10-10T09:24:23.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>最初的需求是持续集成inhouse推送考虑例外情况（周六周日对比commit 若无更新，不进行推送）<br>通过经理指点，明白了需求是使用Jenkins时，如果GIT_COMMIT无变化，跳过构建<br>使用插件：<code>conditional steps(multiple)</code><br>github： <a href="https://github.com/jenkinsci/conditional-buildstep-plugin" target="_blank" rel="external">https://github.com/jenkinsci/conditional-buildstep-plugin</a><br>方法很简单：<br>如果环境变量GIT_PREVIOUS_SUCCESSFUL_COMMIT不存在，或者GIT_COMMIT和GIT_PREVIOUS_SUCCESSFUL_COMMIT不同，才会执行构建。<br>如下图所示：</p>
+<hr>
+<p><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/conditional.png" alt="Conditional配置"><br>还是检讨一下，考虑太少，对jenkins了解依然不够。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;最初的需求是持续集成inhouse推送考虑例外情况（周六周日对比commit 若无更新，不进行推送）&lt;br&gt;通过经理指点，明白了需求是使用Jenkins时，如果GIT_COMMIT无变化，跳过构建&lt;br&gt;使用插件：&lt;code&gt;conditional steps(multip
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>持续集成实施(四)</title>
+    <link href="http://yoursite.com/2016/10/09/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E5%AE%9E%E6%96%BD-%E5%9B%9B/"/>
+    <id>http://yoursite.com/2016/10/09/持续集成实施-四/</id>
+    <published>2016-10-09T05:49:16.000Z</published>
+    <updated>2016-10-10T03:51:23.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>本篇介绍有关jenkins项目依赖的插件parameterized trigger plugin等。<br>先表明我们的需求是需要使用git parameter，这个插件的好处是可以在参数化构建前，将项目所<br>有分支同步过来然后选择分支构建，方便进行版本控制。</p>
+<hr>
+<h3 id="一、git-parameter使用"><a href="#一、git-parameter使用" class="headerlink" title="一、git parameter使用"></a>一、git parameter使用</h3><p>git parameter在github上地址：<a href="https://github.com/jenkinsci/git-parameter-plugin" target="_blank" rel="external">https://github.com/jenkinsci/git-parameter-plugin</a><br>在jenkins上安装插件以后，选择参数化构建就可以使用。<br>需要注意的是：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">1、Parameter Type==》Branch 或者 Tag等，目前使用Branch</div><div class="line">2、Branch Fiter==》正则匹配，可以过滤掉不希望显示的分支，</div><div class="line">3、目前为了过滤sandbox，使用表达式^((?!(sandbox)).)*$</div></pre></td></tr></table></figure></p>
+<p>在使用git parameter之后，遇到了一个坑，因为在打iOS的包的时候，使用了Multiple SCMs来<br>拉取代码的，发现在使用过程中遇到，选择Build with Parameters时候，Branch出现报错提示为：<br><code>!No Git respository configured in SCM configuration</code>，原来git parameter这个插件不能支持Multiple SCMs，已经提了issue，开源作者貌似没动静。</p>
+<h3 id="二、parameterized-trigger-plugin使用"><a href="#二、parameterized-trigger-plugin使用" class="headerlink" title="二、parameterized trigger plugin使用"></a>二、parameterized trigger plugin使用</h3><p>parameterized trigger plugin可以用来传递不同job一个文件名或者路径，这个时候我们不需要传递文件实体，那这个路径如何传递呢？比如有如下两个项目，我想把A的工作目录传递给B，让B使用。 操作流程分为两步：<br>1、在Ajob内的操作：</p>
+<hr>
+<p><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/parameterA.png" alt="A项目中配置"><br>如图所示：我将A项目的工作目录传递给了自定义参数TEST_WORKSPACE.到这里A项目的配置就完成了。<br>2、在Bjob内配置：</p>
+<hr>
+<p><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/parameterB.png" alt="B项目中配置"><br>我们在A项目配置的TEST_WORKSPACE参数，如果在B job中使用，首先我们在配置界面中，勾选The build is parameterized。这样我们就在当前工作环境中得到了由A传递过来的参数。</p>
+<h3 id="三、Multijob-Plugin插件"><a href="#三、Multijob-Plugin插件" class="headerlink" title="三、Multijob Plugin插件"></a>三、Multijob Plugin插件</h3><p>这是一个集成了ParameterizedTrigger和BuildPipeline的插件，但它是形成一个新的job，而不是一个视图。并且它不要求job之间本身就存在依赖关系。这样一来，建立job的时候可以保持相对的独立性，而通过这个插件来组装成产品所需要的持续集成环境。<br>需要注意的是：在创建job时一定要选择“MultiJob Project”，在“free-style project”下默认<br>是不能选择使用这个插件的。<br>如图所示我集成了Multijob之后，新建了两个下游项目。</p>
+<hr>
+<p><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/Mutijob1.png" alt="Multijob展示"><br>配置如下：</p>
+<hr>
+<p><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/Mutijob2.png" alt="Multijob配置两个job"></p>
+<p>需要在两个下游job中配置一下参数，就能引用Multijob中的参数：</p>
+<hr>
+<p><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/Mutijob3.png" alt="job配置两个job"></p>
+<h3 id="四、Join-Plugin插件"><a href="#四、Join-Plugin插件" class="headerlink" title="四、Join Plugin插件"></a>四、Join Plugin插件</h3><p>这也是一个触发job的插件，亮点在于它触发job的条件是等待所有当前job的下游的job都完成才会发生。当然，只有在当前job有两个及以上的下游job时才有意义。简单举个例子来说，A同时触发B1和B2两个job，然后配置这个插件又触发C，这时C就会等B1和B2都完成之后才会被执行。<br>需要注意的是：默认情况下，通过Join插件触发的job是不能传递参数的，如果有需要，可以勾选“Trigger parameterized build on other project”，这样其实就是把Join插件和<br>ParameterizedTrigger插件集成起来了。</p>
+<hr>
+<p><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/join1.png" alt="Join配置job"><br>当然同样需要在下游job中配置一下参数化构建，才能引用Join中的传递的参数。</p>
+<h3 id="五、命令行直接git-clone代码"><a href="#五、命令行直接git-clone代码" class="headerlink" title="五、命令行直接git clone代码"></a>五、命令行直接git clone代码</h3><p>最后发现，这些插件都不能满足项目要求，最后无奈只能选用命令行git clone代码的方法，可以通过ssh(key file)或者https(.netrc)，当然我们的项目代码都是ssh，所以直接git clone ssh://xxx即可，当然，<br>需要在构建环境中选择SSH Agent确认Credentials。</p>
+<hr>
+<p>简单记述，以便整理。。。。。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;本篇介绍有关jenkins项目依赖的插件parameterized trigger plugin等。&lt;br&gt;先表明我们的需求是需要使用git parameter，这个插件的好处是可以在参数化构建前，将项目所&lt;br&gt;有分支同步过来然后选择分支构建，方便进行版本控制。&lt;/p&gt;
+
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>持续集成实施(三)</title>
+    <link href="http://yoursite.com/2016/10/08/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E5%AE%9E%E6%96%BD-%E4%B8%89/"/>
+    <id>http://yoursite.com/2016/10/08/持续集成实施-三/</id>
+    <published>2016-10-08T07:33:09.000Z</published>
+    <updated>2016-10-10T03:26:57.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>持续集成到今天，回头望去满眼都是坑，简单梳理一下。。。。</p>
+<hr>
+<h3 id="一、iOS问题"><a href="#一、iOS问题" class="headerlink" title="一、iOS问题"></a>一、iOS问题</h3><p>1、因为两个平台用的xcode版本不一致，需要升级到xcode8，然后xcode打包有个大坑，需要将自动管理改为手动管理证书。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">sed -i &apos;&apos; &apos;s/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g&apos; </div><div class="line">&quot;$project_path/project.pbxproj&quot;</div></pre></td></tr></table></figure></p>
+<p>2、xcode8打包多了个<code>PROVISIONING_PROFILE_SPECIFIER</code>需要指定证书具体名称。<br>最后用gym打包成功：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">DEVELOPER_DIR=&quot;/Applications/Xcode8.app&quot; </div><div class="line">PROVISIONING_PROFILE_SPECIFIER=&quot;$&#123;PROVISIONING_PROFILE_SPECIFIER&#125;&quot; </div><div class="line">gym </div><div class="line">--workspace $&#123;workspace_path&#125; --scheme $&#123;scheme&#125; --clean </div><div class="line">--configuration $&#123;configuration&#125; </div><div class="line">--xcargs&quot;PRODUCT_BUNDLE_IDENTIFIER=&apos;$&#123;bundle_id&#125;&apos; </div><div class="line">PROVISIONING_PROFILE=&apos;$&#123;rightProvision&#125;&apos; </div><div class="line">DEVELOPMENT_TEAM=&apos;$&#123;DEVELOPMENT_TEAM&#125;&apos;&quot; </div><div class="line">--export_method $&#123;export_method&#125; </div><div class="line">--archive_path $&#123;archive_path&#125;</div><div class="line">--codesigning_identity &quot;$&#123;rightDistributionSign&#125;&quot; </div><div class="line">--export_options $&#123;ExoptionPlist&#125; </div><div class="line">--output_directory $&#123;ipa_path&#125; </div><div class="line">--output_name $&#123;ipa_name&#125;</div></pre></td></tr></table></figure></p>
+<p>3、pod install总是出现问题，分析可能是因为网络或者本机pod安装有问题。<br>若是pod问题，可以通过升级gem解决。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">sudo gem update --system</div><div class="line">sudo gem install -n /usr/local/bin cocoapods</div></pre></td></tr></table></figure></p>
+<p>4、很奇特命令行总是提示warning:Insecure would writable dir /usr/local/bin in path:mode 04077。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo chmod go -w /usr/local/bin</div></pre></td></tr></table></figure></p>
+<hr>
+<h3 id="二、安卓问题"><a href="#二、安卓问题" class="headerlink" title="二、安卓问题"></a>二、安卓问题</h3><p>1、在集成monkey执行过程中，出现增加下游项目，但是在上游项目执行完之后，下游项目却不执行的奇怪问题，使用插件<code>Build Other Project</code>。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">配置configure build authorization==&gt;Run as who triggered Build</div><div class="line">设置Build after other project are built==&gt;在构建不稳定时依然触发</div><div class="line">配置Copy artifacts from another project，需要注意的是上一个项目一定要archive the </div><div class="line">artifacts</div><div class="line">通过解压tar -zxf /archive.tgz -C out/</div><div class="line">adb install -r out/*.apk</div></pre></td></tr></table></figure></p>
+<p>还有iOS两个平台证书合并之后的问题待我解决。。。。。希望可以梳理一下苹果的证书的各种问题，等我足够了解吧。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;持续集成到今天，回头望去满眼都是坑，简单梳理一下。。。。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h3 id=&quot;一、iOS问题&quot;&gt;&lt;a href=&quot;#一、iOS问题&quot; class=&quot;headerlink&quot; title=&quot;一、iOS问题&quot;&gt;&lt;/a&gt;一、iOS问题&lt;/h3&gt;&lt;p&gt;1、因为两个平台用
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>持续集成实施(二)</title>
+    <link href="http://yoursite.com/2016/09/27/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E5%AE%9E%E6%96%BD-%E4%BA%8C/"/>
+    <id>http://yoursite.com/2016/09/27/持续集成实施-二/</id>
+    <published>2016-09-27T05:39:16.000Z</published>
+    <updated>2016-09-27T06:41:43.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>此文，接持续集成一的内容，今天主要简单梳理android打包的<code>gradle</code>命令，和记述jenkins集成过程中遇到的问题和解决方案。</p>
+<hr>
+<h4 id="一、gradlew命令"><a href="#一、gradlew命令" class="headerlink" title="一、gradlew命令"></a>一、gradlew命令</h4><p>在iOS持续集成过程中，打包最后用fastlane方案解决，在android打包过程中，发现之前的方式是<br><code>gradle</code>，神奇的是fastlane也简介了<code>gradle</code>，关键点是之前打包提示报错<code>gradle</code>的版本较低，但是后来选择<code>gradlew</code>却能执行了。<br>gradlew 是什么东西呢，和gradle貌似不大一样，肯定有关系。没错，他就是gradle wrapper，意思是gradle的一个包装，大家可以理解为在这个项目本地就封装了gradle，比如我的项目是HelloWord, 在HelloWord/gradle/wrapper/gralde-wrapper.properties文件中声明了它指向的目录和版本，<br>比如工程的内容是：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">distributionBase=GRADLE_USER_HOME</div><div class="line">distributionPath=wrapper/dists</div><div class="line">zipStoreBase=GRADLE_USER_HOME</div><div class="line">zipStorePath=wrapper/dists</div><div class="line">distributionUrl=https\://services.gradle.org/distributions/gradle-2.10-all.zip</div></pre></td></tr></table></figure></p>
+<p>如果你项目没有该文件的话，那么gradlew会到~/.gradle/wrapper/dists/gradle-2.10-all下寻找，或者你新建给文件，内容复制到里面。其实你会发现是同一个目录咯。里面会有个随机数的文件夹，里面就是gradle，只要下载成功即可用grdlew wrapper的命令代替全局的gradle命令。<br>这就是在jenkins执行过程中选择<code>Use Gradle Wrapper</code>的魅力之处了把。</p>
+<h4 id="二、遇到的问题和整理"><a href="#二、遇到的问题和整理" class="headerlink" title="二、遇到的问题和整理"></a>二、遇到的问题和整理</h4><p>1、升级gym中提示报错<code>While executing gem(Gem:specific Gem Not Found Exception)</code><br>解决：很奇怪的解决方案<code>sudo gem update gym -v 0.10.0</code>就是之前升级命令指向了升级的版本号。</p>
+<p>2、jenkins在一个project中使用多个repo的内容。譬如在打包task中支持ci_android的项目代码。 简单来说就是可以在一个job中clone下多份源码然后一一进行操作。<br>解决：其实这里需要做反省，之前对jenkins研究不是很透，然后还信誓旦旦的说了错话，感觉自己打脸自己，好响。闲话不表，其实jenkins中一个插件可以实现，<code>Multiple SCMs</code>可以实现，非常简单，<br>最重要的是可以在增加git源码的下面，有个选项<br><code>Additional Behaviours==&gt;check out to a sub-directory</code>可以新建一个子目录存放第<br>二个git下的源码。</p>
+<hr>
+<p>下面会继续研究lint已经各种静态代码检查的内容，并且继续踏坑。。。。。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;此文，接持续集成一的内容，今天主要简单梳理android打包的&lt;code&gt;gradle&lt;/code&gt;命令，和记述jenkins集成过程中遇到的问题和解决方案。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h4 id=&quot;一、gradlew命令&quot;&gt;&lt;a href=&quot;#一、gradlew命令&quot; clas
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>持续集成实施(一)</title>
+    <link href="http://yoursite.com/2016/09/23/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E5%AE%9E%E6%96%BD-%E4%B8%80/"/>
+    <id>http://yoursite.com/2016/09/23/持续集成实施-一/</id>
+    <published>2016-09-23T11:03:23.000Z</published>
+    <updated>2016-09-27T06:08:58.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>其实在前期已经投入精力对持续集成进行部署，但是真正的困难不是部署应该走的方向，却是过程中发生的一个个的“坑”，如何对待这些拦路虎并跨过他们，记述一二。</p>
+<hr>
+<h3 id="一、iOS集成"><a href="#一、iOS集成" class="headerlink" title="一、iOS集成"></a>一、iOS集成</h3><p>之前使用gym打包为这次iOS的集成提供了方便之门，但是这次需要注意的是:<br>1、需要分别打inhouse，adhoc，appstore的包<br>2、inhouse和adhoc作为内测，需要更换显示图标，加上内测字样。<br>3、inhouse包需要上传蒲公英（之前选择的Fir因为收费放弃），需要跟slack对接，并且自动推送。<br>4、appstore需要上传TestFlight<br>当然已经全部实现了，把其中遇到的波折一项项列一下。</p>
+<hr>
+<p>（1）分别打三种包，对证书和<code>rightProvision</code>了解的不够透彻？<br>解决：把三种证书都从开发那里要过来，然后将自己的APPLE ID升级到开发者<code>Admin</code>状态，就具有了三种证书的使用权限，然后跟开发一一对接，对每个包分别对应的证书了解并整理，打包的时候一一对应上就好。这个过程中，收获的是对xcodebuild的method参数有更深的了解，其实inhouse，adhoce，appstore分别对应的打包方式是<code>enterprise</code>，<code>ad-hoc</code>，<code>app-store</code>。<br>（2）需要更换inhouse的图标？<br>解决：之前想通过是打包的时候指向不同的<code>target</code>，后来的解决方案是直接替换。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">for file in os.listdir(appIconPath):</div><div class="line">    if &quot;.png&quot; in file:</div><div class="line">        for appicon in os.listdir(replaceAppIconPath):</div><div class="line">            if file == appicon:</div><div class="line">                shutil.copy(replaceAppIconPath+&apos;/&apos;+appicon, appIconPath+&apos;/&apos;+file)</div></pre></td></tr></table></figure></p>
+<p>但是需要注意的是像素和尺寸需要保持一致，设计同学的帮忙很必要。<br>（3）之前上传Fir，后来因为Fir每日超过下载量需要收费，决定更改内测分发平台。<br>解决：之前是想通过上传公司内部服务器，然后给出外网链接，然后分发下载，后来因为感觉进入到下载页面以后没有关于ipa各种信息的介绍，比如build_version和build_number等。<br>但是要记录一下用ftp上传的时候由于是匿名上传，之前尝试出现各种错误，因为能力不够经验缺少的原因吧，后来用python实现上传ftp。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line">def ftpconnect(host):</div><div class="line">    ftp = FTP()</div><div class="line">    ftp.connect(host, 21)  </div><div class="line">    # 登录</div><div class="line">    try:</div><div class="line">        ftp.login()</div><div class="line">    except ftplib.error_perm:</div><div class="line">        print &quot;ERROR: cannot login anonymously&quot;</div><div class="line">        ftp.quit()</div><div class="line">        return None</div><div class="line">    ftp.cwd(&apos;xx/&apos;) # *不是根目录*</div><div class="line">    return ftp</div><div class="line">def uploadfile(ftp, name, localpath):</div><div class="line">    bufsize = 1024</div><div class="line">    fp = open(localpath, &apos;rb&apos;)</div><div class="line">    ftp.storbinary(&apos;STOR &apos; + name, fp, bufsize)</div><div class="line">    ftp.set_debuglevel(0)</div><div class="line">    fp.close()</div><div class="line">if __name__ == &quot;__main__&quot;:</div><div class="line"></div><div class="line">    host = &quot;ip&quot;</div><div class="line">    localpath = &quot;xx&quot;</div><div class="line">    ipa_path = &quot;xx&quot;</div><div class="line">    name = &quot;xx.ipa&quot;</div><div class="line">    ftp = ftpconnect(host)</div><div class="line">    uploadfile(ftp, name, localpath)</div><div class="line">    ftp.quit()</div></pre></td></tr></table></figure></p>
+<p>其实之前放弃蒲公英是因为蒲公英上传之后的api返回值有一个特点，生成的二维码是固定不变的，但是下载的短链接网址是跟着其中的key字段改变的，经过仔细对比发现<code>appShortcutUrl</code>字段不会变化。自然有了对策。实现方式，自己拼接：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">def parseUploadResult(jsonResult):</div><div class="line">    resultCode = jsonResult[&apos;code&apos;]</div><div class="line">    if resultCode != 0:</div><div class="line">        print &quot;Upload Fail!&quot;</div><div class="line">        raise Exception(&quot;Reason: %s&quot; % jsonResult[&apos;message&apos;])</div><div class="line">    appShortcutUrl = jsonResult[&apos;data&apos;][&apos;appShortcutUrl&apos;]</div><div class="line">    appDownloadPageURL = &quot;https://www.pgyer.com/%s&quot; % appShortcutUrl</div><div class="line">    return appDownloadPageURL</div></pre></td></tr></table></figure></p>
+<p>（4）和slack对接<br>解决：其实我觉得slack真的非常好用，因为它提供了各种整合持续集成的api，这里特别佩服我们老大对这块内容的重视，slack和jenkins集成非常方便。只是网速有点不靠谱。<br>slack api地址:<code>https://api.slack.com/docs/message-guidelines</code><br>然后构造请求，发送即可，详细不表。<br>（5）将appstore的包上传TestFlight<br>解决：之前安装testflight，一直遇到的问题是会有一个类似如下的报错：<br><code>from /usr/local/bin/fastlane:23:in &#39;&lt;main&gt;&#39;</code>，其实一条命令解决了，<br><code>sudo gem uninstall bundler</code>，其实这是fastlane的bug。<br>用pilot可以上传到TestFlight，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">pilot upload --verbose --username $&#123;username&#125; </div><div class="line">--app_identifier $&#123;bundle_id&#125; --ipa $&#123;ipa_path&#125; --apple_id $&#123;apple_id&#125; </div><div class="line">--team_id $&#123;team_id&#125; --team_name &quot;$&#123;team_name&#125;&quot; --dev_portal_team_id </div><div class="line">$&#123;dev_portal_team_id&#125; --itc_provider &quot;$&#123;itc_provider&#125;&quot;</div></pre></td></tr></table></figure></p>
+<h3 id="二、Android集成"><a href="#二、Android集成" class="headerlink" title="二、Android集成"></a>二、Android集成</h3><p>安卓打包更简单一点，但是一上来的错误就弄懵懂了我，因为对安卓平台的确接触不多。</p>
+<hr>
+<p>（1）gradle version is 2.14.1，Current Version is 2.9。<br>解决：最后很简单就实现，选择jenkins构建grale脚本中，Use Gradle Wrapper，即可。</p>
+<hr>
+<p>先写这么多，因为发现安卓又报错了，去解决问题了。。。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;其实在前期已经投入精力对持续集成进行部署，但是真正的困难不是部署应该走的方向，却是过程中发生的一个个的“坑”，如何对待这些拦路虎并跨过他们，记述一二。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h3 id=&quot;一、iOS集成&quot;&gt;&lt;a href=&quot;#一、iOS集成&quot; class=&quot;headerlin
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Charles抓包指南</title>
+    <link href="http://yoursite.com/2016/09/20/Charles%E6%8A%93%E5%8C%85%E6%8C%87%E5%8D%97/"/>
+    <id>http://yoursite.com/2016/09/20/Charles抓包指南/</id>
+    <published>2016-09-20T01:38:03.000Z</published>
+    <updated>2016-09-20T06:01:05.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>写在前面，本来特别想吐槽的，之前用charles很正常的，昨天临时急用的时候，又不能抓包了，今早有时间整理一下文档。<br><em>Charles版本号:</em><code>V4.0</code>【当前官网最新版本】<br>需要实现的是，可以通过charles代理，抓取HTTPS的信息。</p>
+<hr>
+<h3 id="一、步骤"><a href="#一、步骤" class="headerlink" title="一、步骤"></a>一、步骤</h3><h4 id="1、安装Charles"><a href="#1、安装Charles" class="headerlink" title="1、安装Charles"></a>1、安装Charles</h4><p>Charles下载地址：<code>https://www.charlesproxy.com/download/</code>。<br>破解jar包下载：<code>http://pan.baidu.com/s/1nvuAneL</code>，密码<code>sctc</code>。将下载的文件重命名为charles.jar并覆盖到Content-&gt;Java下即可完成破解(MAC)</p>
+<h4 id="2、打开设置基本参数"><a href="#2、打开设置基本参数" class="headerlink" title="2、打开设置基本参数"></a>2、打开设置基本参数</h4><p>我选择的是mac版本的，下载安装好之后，打开Proxy——Proxy Settings…——Proxies——HTTP Proxy里的Port，就是代理的端口，是与手机端一致（比如这里默认8888）——勾选Enable transparent HTTP proxying</p>
+<h4 id="3、手机连接wifi，并且设置手动代理"><a href="#3、手机连接wifi，并且设置手动代理" class="headerlink" title="3、手机连接wifi，并且设置手动代理"></a>3、手机连接wifi，并且设置手动代理</h4><p>（ip为当前电脑，端口是上面设置的8888） 此时，手机打开一个url，已经可以实现初步抓包！下面接着把https的配置好。</p>
+<h4 id="4、接着配置电脑上charles的ssl"><a href="#4、接着配置电脑上charles的ssl" class="headerlink" title="4、接着配置电脑上charles的ssl"></a>4、接着配置电脑上charles的ssl</h4><p>Proxy——SSL Proxying Settings——SSL Proxying ——勾选Enable SSL Proxying——Locations里add一个Host和port（比如xxx-api.xxx.com, 443）(注意，这里先别填*:443, 下文会说明为什么）​，现在最重要的是两个证书。</p>
+<h4 id="5、电脑端的证书"><a href="#5、电脑端的证书" class="headerlink" title="5、电脑端的证书"></a>5、电脑端的证书</h4><p>Help——SSL Proxying——Install Charles Root Certificate,如图所示<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/ssl_pc.png" width="600" height="400" alt="直接安装不可行" align="center"><br>但是发现提示安装不了，这个时候，发现可以通过<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/ssl_pc_save.png" width="600" height="400" alt="先保存后安装" align="center"><br>可保存为默认名字<code>charles-ssl-proxying-certificate.cer</code>。然后拖入钥匙串，分别拖入钥匙串的登录和系统，并且都选择信任。<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/cert.png" width="600" height="400" alt="拖入钥匙串选择信任" align="center"></p>
+<h4 id="6、手机端证书"><a href="#6、手机端证书" class="headerlink" title="6、手机端证书"></a>6、手机端证书</h4><p>在safari输入<code>http://www.charlesproxy.com/getssl/</code>，下载安装即可。</p>
+<h4 id="7、最后一步"><a href="#7、最后一步" class="headerlink" title="7、最后一步"></a>7、最后一步</h4><p>记得前面说过的<em>：443吗，对，这时就可以改为</em>：443了，手机端，电脑，都可以访问任意https而畅通无阻。（如果前面就设置了，就会出现，手机访问xxx-api.xxx.com正常，而电脑访问一些https的资源时，就有问题……我就是刷着知乎，发现样式全丢了，一看charles，全部报红叉）。</p>
+<hr>
+<p>就写这么多，至于Charles使用方法，可以自行百度了。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;写在前面，本来特别想吐槽的，之前用charles很正常的，昨天临时急用的时候，又不能抓包了，今早有时间整理一下文档。&lt;br&gt;&lt;em&gt;Charles版本号:&lt;/em&gt;&lt;code&gt;V4.0&lt;/code&gt;【当前官网最新版本】&lt;br&gt;需要实现的是，可以通过charles代理，抓取H
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>iOS自动化实践——jenkins持续集成(五)</title>
+    <link href="http://yoursite.com/2016/09/13/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94jenkins%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90-%E4%BA%94/"/>
+    <id>http://yoursite.com/2016/09/13/iOS自动化实践——jenkins持续集成-五/</id>
+    <published>2016-09-13T06:44:31.000Z</published>
+    <updated>2016-09-13T07:23:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<hr>
+<p>本篇总结fastlane gym打包和jenkins配置的相关问题。</p>
+<hr>
+<h3 id="一、fastlane-gym打包"><a href="#一、fastlane-gym打包" class="headerlink" title="一、fastlane gym打包"></a>一、fastlane gym打包</h3><p>1、gym可以理解为，实质是fastlane内的一个组件。fastlane是由ruby封装的xcodebuild命令，通过查阅官方github可以看到它的安装命令和使用简介。<br>fastlane github地址为：<a href="https://github.com/fastlane/fastlane" target="_blank" rel="external">https://github.com/fastlane/fastlane</a><br>gym github地址为：<a href="https://github.com/fastlane/fastlane/tree/master/gym" target="_blank" rel="external">https://github.com/fastlane/fastlane/tree/master/gym</a><br>fastlane使用命令直接安装：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">sudo gem install fastlane --verbose</div><div class="line">xcode-select --install</div><div class="line">gem cleanup</div></pre></td></tr></table></figure></p>
+<p>gym使用命令安装：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">sudo gem install gym</div><div class="line">xcode-select --install</div></pre></td></tr></table></figure></p>
+<p>2、本次只是为了打ipa包，我直接选择使用gym命令，最后命令为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">gym --workspace $&#123;workspace_path&#125; --scheme $&#123;scheme&#125; --clean --configuration </div><div class="line">$&#123;configuration&#125; --xcargs &quot;PRODUCT_BUNDLE_IDENTIFIER=&apos;$&#123;bundle_id&#125;&apos; </div><div class="line">PROVISIONING_PROFILE=&apos;$&#123;rightProvision&#125;&apos;&quot; --archive_path $&#123;archive_path&#125; </div><div class="line">--codesigning_identity &quot;$&#123;rightDistributionSign&#125;&quot; --export_options </div><div class="line">$&#123;ExoptionPlist&#125; --output_directory $&#123;ipa_path&#125; --output_name $&#123;ipa_name&#125;</div></pre></td></tr></table></figure></p>
+<p>3、遇到的问题<br>问题：–export_options ${ExoptionPlist}之前会出错，是因为之前按照gym -h查看帮忙命令的时候，有–export_options [value]存在，一直写的是–export_options [plist]。<br>解决：过程就不详细描述了，看了源码中关于–export_options的介绍，这里应该是指明path，不需要指明[value]中值。</p>
+<hr>
+<h3 id="二、配置jenkins-master和slave"><a href="#二、配置jenkins-master和slave" class="headerlink" title="二、配置jenkins master和slave"></a>二、配置jenkins master和slave</h3><p>1、因为jenkins master和slave已经配置好了，由于没有真的配置master和slave，侧面了解了一些概念，jenkins在“管理界面“可以方便的添加节点，配置节点时候，这里的节点可以理解为slave，需要节点所在机器的登陆用户名和密码，涉及到mac slave，需要在共享界面，打开任意用户可以登陆并且打开远程连接和屏幕共享。<br>需要注意的是slave不需要再按照jenkins，jenkins会自动启用slave agent，将build需要的tools拷贝到远程服务器。而且每次构建的结果应该都是存放在master上的，不需要在各个节点去查看build产生的结果文件。<br>2、遇到的问题<br>（1）gym command not found<br>解决：Inject environment variables to the build process或在命令行执行前直接<br><code>export PATH=$PATH:/usr/local/bin</code>都可解决。<br>（2）mac slave中shell被更改<br>解决：通过命令行打印<code>echo SHELL</code>确认当前slave启动的shell，然后通过命令<code>sudo chsh -s /bin/bash</code>改为默认的shell。<br>（3）gym报错<code>invalid byte sequence in US-ASCII (ArgumentError)</code><br>解决：在jenkins命令行执行前<code>export RUBYOPT=&quot;-KU -E utf-8:utf-8&quot;</code>或者导入变量<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">export LANG=en_US.UTF-8</div><div class="line">export LANGUAGE=en_US.UTF-8</div><div class="line">export LC_ALL=en_US.UTF-8</div></pre></td></tr></table></figure></p>
+<p>(4)gym报错<code>Exit status: 65</code><br>解决：在jenkins命令行执行前导入<code>export MallocNanoZone=0</code><br>(5)老问题slave上命令行可以正常执行，jenkins中一直报错archive failed<br>解决：这个问题的解决过程十分漫长，原因是一直关注的是jenkins log，没有看到明显的报错日志，再加上上面遇到的这么多问题，一直在重复的打包，查报错日志，最后把关注点放在了gym执行报错的日志中，查到一句是<code>User interaction is not allowed</code>，这个时候才确认是因为权限问题。<br>解决只有两个步骤：首先在mac slave上打开钥匙串，然后在系统内找到证书然后授权让所有用户可以使用<br>其次在jenkins中执行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">security -v unlock-keychain -p &quot;password&quot; &quot;$HOME/Library/Keychains/</div><div class="line">login.keychain&quot;</div></pre></td></tr></table></figure></p>
+<p>(6)archive the artifacts一直配置报错<br>解决：在workspace下配置相对路径即可。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;hr&gt;
+&lt;p&gt;本篇总结fastlane gym打包和jenkins配置的相关问题。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h3 id=&quot;一、fastlane-gym打包&quot;&gt;&lt;a href=&quot;#一、fastlane-gym打包&quot; class=&quot;headerlink&quot; title=&quot;一、fastla
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>iOS自动化实践——jenkins持续集成(四)</title>
+    <link href="http://yoursite.com/2016/09/08/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94jenkins%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90-%E5%9B%9B/"/>
+    <id>http://yoursite.com/2016/09/08/iOS自动化实践——jenkins持续集成-四/</id>
+    <published>2016-09-08T06:04:16.000Z</published>
+    <updated>2016-09-08T06:33:20.000Z</updated>
+    
+    <content type="html"><![CDATA[<hr>
+<p>为了实现持续集成，今天简介一下如何在一台新的mac上搭建持续集成iOS测试的环境。</p>
+<hr>
+<h4 id="一、安装各种依赖"><a href="#一、安装各种依赖" class="headerlink" title="一、安装各种依赖"></a>一、安装各种依赖</h4><p>本服务是为了配合WebDrvierAgent以及fastlane打包，自动化UI测试，故先安装WebDriverAgent部分。先插一句需要升级系统和xcode。<br>1、升级brew<code>brew update</code><br>2、安装client端，python-wda。<br>3、安装pycharm<br>4、安装node<br>5、安装libusbmuxd工程。<a href="https://diaojunxian.github.io/2016/08/30/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94WebDriverAgent-%E4%B8%83/" target="_blank" rel="external">具体可见</a><br>6、安装WebDriverAgent工程。<a href="https://diaojunxian.github.io/2016/07/22/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94WebDriverAgent-%E4%B8%80/" target="_blank" rel="external">具体可见</a></p>
+<h4 id="二、clone-gerrit代码到本地"><a href="#二、clone-gerrit代码到本地" class="headerlink" title="二、clone gerrit代码到本地"></a>二、clone gerrit代码到本地</h4><p>1、生成pub，使用命令<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ssh-keygen -t rsa -C &quot;邮箱账号&quot;</div></pre></td></tr></table></figure></p>
+<p>将生成的rsa获取到并加入gerrit设置内。<br>2、分别clone iOS工程和UI iOS测试脚本倒本地。</p>
+<h4 id="三、遇到的问题"><a href="#三、遇到的问题" class="headerlink" title="三、遇到的问题"></a>三、遇到的问题</h4><p>1、现象：配置环境变量通过vi ~/.bash_profile配置完毕以后，发现关闭终端重启之后，无法生效。<br>解决：之前使用mac的同事配置了zsh，故而不能生效。选择终端==》偏好设置==》通用==》Shell的打开方式==》选择<code>/bin/bash</code></p>
+<p>2、现象：使用pycharm无法执行pytest框架的测试用例。<br>解决：pytest.ini之前没有上传gerrit没有拉取到服务器，配置Options存在空格。</p>
+<hr>
+<p>后续还有fastlane打包等折腾的路要走。。。。。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;hr&gt;
+&lt;p&gt;为了实现持续集成，今天简介一下如何在一台新的mac上搭建持续集成iOS测试的环境。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h4 id=&quot;一、安装各种依赖&quot;&gt;&lt;a href=&quot;#一、安装各种依赖&quot; class=&quot;headerlink&quot; title=&quot;一、安装各种依赖&quot;&gt;&lt;/a&gt;一、安
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>iOS自动化实践——WebDriverAgent(七)</title>
+    <link href="http://yoursite.com/2016/08/30/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94WebDriverAgent-%E4%B8%83/"/>
+    <id>http://yoursite.com/2016/08/30/iOS自动化实践——WebDriverAgent-七/</id>
+    <published>2016-08-30T07:41:46.000Z</published>
+    <updated>2016-08-30T08:21:31.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>WebDriverAgent使用过程中，发现Wifi可能会存在连接不稳定的情况，这个时候可以借助usb进行连接通信，怎么做呢？</p>
+<hr>
+<h2 id="实现方式"><a href="#实现方式" class="headerlink" title="实现方式"></a>实现方式</h2><hr>
+<p>1、借助libusbmuxd<br>下载地址：<code>https://github.com/libimobiledevice/libusbmuxd</code><br>2、libusbmuxd实现原理<br>pc端出去的http数据，走USB协议，然后USB回传回来后，映射成本地端口，走localhost 来进行本地HTTP协议，不用走wifi这种网络路由转发。Webdriveragent使用server端和client端通信，正好可以借助libusbmuxd。<br>3、使用方发：</p>
+<hr>
+<p>(1)clone到本地：git clone <code>https://github.com/libimobiledevice/libusbmuxd.git</code><br>(2)下载依赖：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">brew install libplist</div><div class="line">brew install usbmuxd</div><div class="line">brew install cmake</div><div class="line">brew install automake</div><div class="line">brew install autoconf</div><div class="line">brew install libtool</div><div class="line">brew install pkg-config</div><div class="line">brew install gcc</div></pre></td></tr></table></figure></p>
+<p>需要注意的是libusbmuxd项目README中make和autoheader没有安装成功。<br>(3)编译安装：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">./autogen.sh</div><div class="line">make</div><div class="line">sudo make install</div></pre></td></tr></table></figure></p>
+<p>(4)运行：<code>iproxy LOCAL_TCP_PORT DEVICE_TCP_PORT [UDID]</code>，这里的LOCAL_TCP_PORT填写5000，因为Webdriveragent源码中写的local本地port是5000，DEVICE_TCP_PORT这里写的是8100，因为启动server以后监听的端口号是8100。<br>(5)启动iproxy以后，正常启动Webdriveragent server，然后在client端用例中传入的ip:port是<br><code>localhost:5000</code>即可。</p>
+<hr>
+<h2 id="遇到的问题"><a href="#遇到的问题" class="headerlink" title="遇到的问题"></a>遇到的问题</h2><hr>
+<p>1、出现libusbmuxd项目README中make和autoheader没有安装成功。<br>最后方案：未解决跳过。<br>2、出现./autogen.sh执行错误。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">error: Package requirements (libplist &gt;= 1.11) were not met:</div><div class="line">Package &apos;libxml-2.0&apos;, required by &apos;libplist&apos;, not found</div><div class="line">Consider adjusting the PKG_CONFIG_PATH environment variable if you</div><div class="line">installed software in a non-standard prefix.</div></pre></td></tr></table></figure></p>
+<p>最后方案：执行./autogen.sh前，先执行下面的两条命令，然后编译通过。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">export libplist_CFLAGS=&apos;-I/usr/local/Cellar/libplist/1.12/include -I/usr/</div><div class="line">include/libxml2&apos;</div><div class="line">export libplist_LIBS=&apos;-L/usr/local/Cellar/libplist/1.12/lib -lplist&apos;</div></pre></td></tr></table></figure></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;WebDriverAgent使用过程中，发现Wifi可能会存在连接不稳定的情况，这个时候可以借助usb进行连接通信，怎么做呢？&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id=&quot;实现方式&quot;&gt;&lt;a href=&quot;#实现方式&quot; class=&quot;headerlink&quot; title=&quot;实现方式&quot;&gt;&lt;/
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>iOS自动化实践——jenkins持续集成(三)</title>
+    <link href="http://yoursite.com/2016/08/25/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94jenkins%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90-%E4%B8%89/"/>
+    <id>http://yoursite.com/2016/08/25/iOS自动化实践——jenkins持续集成-三/</id>
+    <published>2016-08-25T02:06:34.000Z</published>
+    <updated>2016-08-25T07:57:43.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>前面写了git拉取代码，命令行打包，接着加上用例执行和报告展示。</p>
+<hr>
+<h3 id="命令行执行"><a href="#命令行执行" class="headerlink" title="命令行执行"></a>命令行执行</h3><hr>
+<p>采用的iOS测试框架是pytest+unittest，可用命令行执行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">cd /Users/djx/Documents/ui_testing/</div><div class="line">py.test -s -v -pyargs 用例目录 --server-address=(url) </div><div class="line">--app-udid=(ios udid) --app-meta=(设置的meta)</div><div class="line">--junit-xml=junit.xml</div></pre></td></tr></table></figure></p>
+<hr>
+<h3 id="报告展示"><a href="#报告展示" class="headerlink" title="报告展示"></a>报告展示</h3><hr>
+<p>1、采用HTML Publisher Plugin<br>它的功能是将本地生成的HTML的报告展示出来，但是有个问题，由于我自己生成的html里面的css和js路径是本地的，故而放在jenkins内不能展示，只能看到文字却看不到样式。<br>2、采用Publish JUnit test result report<br>这里的功能是将.xml报告通过JUnit展示，增加构建后操作步骤，选择”publish junittest result<br>report”，测试报告栏输入：*.xml,jenkins将会从该job的workspace去查找xml格式的junit报告。</p>
+<hr>
+<p>出现的问题：</p>
+<hr>
+<p>1、Publish JUnit test result report这里是通过把执行目录里面的junit.xml在生成以后复制到jenkins的workspace里面，然后调用展示，而且测试报告栏输入不能输入全路径，输入相对路径。<br>2、发现在jenkins构建中，执行的pytest自动化测试之后，会跳出命令，不执行将junit.xml复制到workspace的shell命令，可在jenkins构建后操作中有execute a set of scripts，在这里选择添加shell命令即可。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;前面写了git拉取代码，命令行打包，接着加上用例执行和报告展示。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h3 id=&quot;命令行执行&quot;&gt;&lt;a href=&quot;#命令行执行&quot; class=&quot;headerlink&quot; title=&quot;命令行执行&quot;&gt;&lt;/a&gt;命令行执行&lt;/h3&gt;&lt;hr&gt;
+&lt;p&gt;采用的iOS测试
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>iOS自动化实践——jenkins持续集成(二)</title>
+    <link href="http://yoursite.com/2016/08/17/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94jenkins%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90-%E4%BA%8C/"/>
+    <id>http://yoursite.com/2016/08/17/iOS自动化实践——jenkins持续集成-二/</id>
+    <published>2016-08-17T07:30:23.000Z</published>
+    <updated>2016-08-25T02:02:39.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>上接<a href="https://diaojunxian.github.io/2016/07/11/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94jenkins%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90/" target="_blank" rel="external">iOS自动化实践——jenkins持续集成打包(一)</a>，已经实现了命令行打包，以后想要实现在jenkins页面展示扫描二维码和安装链接。</p>
+<hr>
+<h4 id="1、二维码获取"><a href="#1、二维码获取" class="headerlink" title="1、二维码获取"></a>1、二维码获取</h4><hr>
+<p>选择通过蒲公英上传app的api，然后python语言实现。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line">def payload(file, userkey, apikey):</div><div class="line">    url = &apos;https://www.pgyer.com/apiv1/app/upload&apos;</div><div class="line">    data=&#123;</div><div class="line">        &apos;uKey&apos;:userkey,</div><div class="line">        &apos;_api_key&apos;:apikey</div><div class="line">    &#125;</div><div class="line">    file_ipa = file+&apos;/MiFit.ipa&apos;</div><div class="line">    ipa_file=&#123;&apos;file&apos;:open(file_ipa, &apos;rb&apos;)&#125;</div><div class="line">    headers=&#123;</div><div class="line">        &apos;enctype&apos;:&apos;multipart/form-data&apos;</div><div class="line">    &#125;</div><div class="line">    try_times = 0</div><div class="line">    while try_times &lt; 5:</div><div class="line">        try:</div><div class="line">            response = requests.post(url, headers=headers,</div><div class="line">                files=ipa_file ,data=data)</div><div class="line">            assert response.status_code == requests.codes.ok</div><div class="line">            result = response.json()</div><div class="line">            appDownloadPageURL = parseUploadResult(result)</div><div class="line">            return appDownloadPageURL</div><div class="line">        except requests.exceptions.ConnectionError:</div><div class="line">            print &apos;requests.exceptions.ConnectionError occured&apos;</div><div class="line">            time.sleep(50)</div><div class="line">            try_times += 1</div><div class="line">        except Exception as e:</div><div class="line">            time.sleep(50)</div><div class="line">            try_times += 1</div><div class="line">        if try_times &gt;= 5:</div><div class="line">            raise Exception(&apos;Upload ipa failed&apos;)</div></pre></td></tr></table></figure></p>
+<p>获取二维码的短链接<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">appQRCodeURL = parseQRCodeImageUrl(data)</div><div class="line">response = requests.get(appQRCodeURL)</div><div class="line">build_image = build_path+&apos;/image&apos;</div><div class="line">if not os.path.exists(build_image):</div><div class="line">    os.makedirs(build_image)</div><div class="line">QR_image_file_path = os.path.join(build_image, &apos;MiFit.png&apos;)</div><div class="line">with open(QR_image_file_path, &apos;wb&apos;) as f:</div><div class="line">    f.write(response.content)</div></pre></td></tr></table></figure></p>
+<p>会发现每次上传安装包后返回的二维码图片是一个短链接，这个短连接居然是固定的（对同一个账号而言）。这个短连接总是指向最近生成的二维码图片，但是对于二维码图片的唯一URL地址，平台并没有在响应中进行返回。在这种情况下，我们每次构建完成后保存二维码图片的URL链接就没有意义了。<br>我的做法是将返回的二维码图片短链接将二维码图片下载并保存到本地，然后在build描述信息中引用该图片的Jenkins地址。</p>
+<hr>
+<h4 id="2、二维码在jenkins上展示"><a href="#2、二维码在jenkins上展示" class="headerlink" title="2、二维码在jenkins上展示"></a>2、二维码在jenkins上展示</h4><hr>
+<p>二维码图片的URL链接有了，那要怎样才能将二维码图片展示在Jenkins项目的历史构建列表中呢？<br>这里需要用到另外一个插件，description setter plugin。安装该插件后，在【Post-build Actions】栏目中会多出description setter功能，可以实现构建完成后设置当次build的描述信息。这个描述信息不仅会显示在build页面中，同时也会显示在历史构建列表中。<br>有了这个前提，要将二维码图片展示在历史构建列表中貌似就可以实现了，能直观想到的方式就是采用HTML的img标签，将<code>&lt;img src=&#39;QR_image_file_path&#39;&gt;</code>写入到build描述信息中。<br>这个方法的思路是正确的，不过这么做以后并不会实现我们预期的效果。<br>这是因为Jenkins出于安全的考虑，所有描述信息的Markup Formatter默认都是采用Plain text模式，在这种模式下是不会对build描述信息中的HTML编码进行解析的。<br>要改变也很容易，Manage Jenkins -&gt; Configure Global Security，将Markup Formatter的设置更改为Safe HTML即可。<br>更改配置后，我们就可以在build描述信息中采用HTML的img标签插入图片了。</p>
+<hr>
+<p>最后的效果<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/jenkins_二维码2.png" alt="展示"></p>
+<hr>
+<h4 id="遇到的问题"><a href="#遇到的问题" class="headerlink" title="遇到的问题"></a>遇到的问题</h4><p>1、<code>&lt;img src=&#39;QR_image_file_path&#39;&gt;</code>写入本地的png生成路径，总是不能展示图片，类似于这样:</p>
+<hr>
+<p><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/jenkins_二维码.png" alt="出错的展示"><br>解决方案：放入png的Jenkins地址。这里的地址可以在工作目录中查看。<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/jenkins_二维码1.png" alt="工作目录"></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;上接&lt;a href=&quot;https://diaojunxian.github.io/2016/07/11/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94j
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Appium and WebDriverAgent</title>
+    <link href="http://yoursite.com/2016/08/04/Appium-and-WebDriverAgent/"/>
+    <id>http://yoursite.com/2016/08/04/Appium-and-WebDriverAgent/</id>
+    <published>2016-08-04T05:37:27.000Z</published>
+    <updated>2016-08-09T00:46:27.000Z</updated>
+    
+    <content type="html"><![CDATA[<h3 id="导语"><a href="#导语" class="headerlink" title="导语"></a>导语</h3><hr>
+<p>一直用的是Appium，最近在研究WebDriverAgent，对二者之间的区别和联系有了更深的认知，<br><code>Appium</code>可跨平台，同时支持安卓和iOS平台，但是WebDriverAgent目前只支持iOS平台，在使用<br><code>Appium</code>过程中发现<code>Appium</code>在定位控件总是会出现不稳定现象，相对而言<code>WebDriverAgent</code>稳定迅捷太多。首先对二者实现原理做简要全面的介绍。</p>
+<hr>
+<h3 id="Appium实现原理"><a href="#Appium实现原理" class="headerlink" title="Appium实现原理"></a>Appium实现原理</h3><p>Appiums是由Nodejs编写的，集成了现有优秀框架，以Selenium WebDriver的协议统一起来，<br>遵循RESTful设计风格web 服务器，它接受客户端的连接，接收客户端的命令，在手机设备上执行命令，然后通过HTTP的响应收集命令执行的结果。<br>这种架构给我们提供了很好的开放特性：只要某种语言有http 客户端的api，我们就可以通过这个语言写我们的测试代码，当然了我们为了方便大家使用，提供了多种语言的客户端库供使用，我们在项目组选择的就是基于<code>Python</code>的<code>client</code>端。</p>
+<h4 id="一、安卓平台实现原理"><a href="#一、安卓平台实现原理" class="headerlink" title="一、安卓平台实现原理"></a>一、安卓平台实现原理</h4><p>1、架构图<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/android.png" width="300" height="400" alt="Android实现架构" align="center"><br>2、实现原理<br>(1)最上面的Client端可以是多种语言编写，它类似于selenium webdriver，封装了selenium的Api，并添加了部分的新的Api，我们可以依据这些Api编辑自动化脚本。<br>(2)Json Wire Protocol是一种协议，遵循REST风格，以JSON方法进行传输，是一系列的键值对，<br>遵循<a href="https://w3c.github.io/webdriver/webdriver-spec.html" target="_blank" rel="external">W3C WebDriver Spec设计风格</a>。<br>(3)中间是起的Appium的服务，Appium在这边起了一个Server（4723端口），在这里提供了一套web服务，Appium Server接收web driver标准请求，解析请求内容，调⽤用对应的uiautomator响应操作<br>(4)<code>Appium server</code>可以把请求接收并转义转发给中间件Bootstrap.jar，<br>它是用java写的，安装在手机上。Bootstrap 接收appium 的命令(4724端口)，最终通过调⽤用UiAutomator的命令来实现对手机的操作。<br>(5)Bootstrap可以理解为它是一个uiautomator的测试脚本，它的入口类Bootstrap继承于UiAutomatorTestCase，所以UiAututomator可以正常运行它，它也可以正常的使用uiautomator的方法，这个就是appium的命令可以转换成uiautomator的命令的关键；其次，它是一个socket服务器，它专门监听4724端口过来的appium的连接和命令数据，并把appium的命令转换成uiautomator的命令来让uiautomator进行处理；最后，它处理的是appium从pc端过来的命令，是一系列的请求。<br>(6)最后执⾏行的结果以Json Wire Protocol，由Bootstrap返回给appium server，再返回给Client端，Client会汇总操作结果。</p>
+<h4 id="二、iOS平台实现原理"><a href="#二、iOS平台实现原理" class="headerlink" title="二、iOS平台实现原理"></a>二、iOS平台实现原理</h4><p>1、架构图<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/iphone.png" width="300" height="400" alt="iOS实现架构" align="center"><br>2、实现原理<br>在iOS端，appium同样使⽤用WebDriver的⼀一套协议。与Android端测试框架不同的是，<br>appium ios封装了apple的 Instruments框架，主要用了Instrument里的UI Automation（Apple<br>的⾃自动化测试框架），然后在设备中注⼊入bootstrap.js进⾏行监听。<br>3、Appium iOS比较慢的原因：<br>(1)python client &lt;====&gt; Http Server<br>(2)Http Server &lt;====&gt; Appium Server<br>(3)Appium Server &lt;====&gt; bootstrap 耗时长<br>(4)bootstrap &lt;====&gt; UIAutomation 耗时长<br>中间层较多，各种通信传输是非常耗时。</p>
+<h3 id="WebDriverAgent实现原理"><a href="#WebDriverAgent实现原理" class="headerlink" title="WebDriverAgent实现原理"></a>WebDriverAgent实现原理</h3><p>现在我想重点介绍的是WebDriverAgent，首先强调它跟UIAutomation没有关系，它封装的是XCTest框架，WebDriverAgent连接XCTest.framework调用苹果的Api直接在设备上执行命令。<br>1、原理图<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/wda.png" width="300" height="400" alt="WebDriverAgent实现架构" align="center"><br>2、实现原理<br>(1)WebDriverAgent封装的是XCTest，而XCTest框架是苹果在xcode5提出的，在Xcode7中已经支持UI功能测试，facebook于2015年提出了WebDriverAgent，可支持真机和模拟器。<br>(2)WebDriverAgent Api支持<a href="https://w3c.github.io/webdriver/webdriver-spec.html" target="_blank" rel="external">W3C WebDriver Spec设计风格</a>。通过命令行或者xcode启动testRunner以后，会在手机端安装一个WebDriverAgentRunner，类似于appium中的bootstrap，可以接收client端发送的http请求，然后将请求转义为XCTest的命令，在手机端进行操作，并且操作结果再以Json的形式反馈给client端进行汇总。<br>(3)这里的Accessibility 是 Apple 很早之前构建的一个框架，它能帮助一些行动不便的用户来更好地使用应用。XCTest利用Accessibility进行UI控件的识别和定位。</p>
+<h3 id="对比"><a href="#对比" class="headerlink" title="对比"></a>对比</h3><p>WebDriverAgent相对于Appium有着很大优势：</p>
+<ul>
+<li>支持一台 mac 连接多台设备进行测试（走 xcodebuild ，不走 instruments）</li>
+<li>任意应用的 UI 测试，是任意</li>
+<li>支持跨应用（任意界面都能控制)</li>
+<li>控件定位方便，直接通过<code>ip:port/inspector</code>查看，无需启动Appium GUI查看</li>
+<li>亲测比Appium执行速度快</li>
+<li>最重要的是苹果官方将UIAutomation标识为废弃，XCTest是未来的趋势，必然会发挥更大的作用</li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h3 id=&quot;导语&quot;&gt;&lt;a href=&quot;#导语&quot; class=&quot;headerlink&quot; title=&quot;导语&quot;&gt;&lt;/a&gt;导语&lt;/h3&gt;&lt;hr&gt;
+&lt;p&gt;一直用的是Appium，最近在研究WebDriverAgent，对二者之间的区别和联系有了更深的认知，&lt;br&gt;&lt;code&gt;Appi
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>iOS自动化实践——WebDriverAgent(六)</title>
+    <link href="http://yoursite.com/2016/08/03/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94WebDriverAgent-%E5%85%AD/"/>
+    <id>http://yoursite.com/2016/08/03/iOS自动化实践——WebDriverAgent-六/</id>
+    <published>2016-08-03T08:00:11.000Z</published>
+    <updated>2016-08-08T10:38:32.000Z</updated>
+    
+    <content type="html"><![CDATA[<h4 id="导语"><a href="#导语" class="headerlink" title="导语"></a>导语</h4><p>今天继续完成appium功能测试脚本向wda迁移过程中，遇到一个问题，无法获取switch的属性值，因为在此client端当前未有，所以今天的任务是写一个类似appium的方法————get_attribute()。</p>
+<hr>
+<h4 id="一、查看源码"><a href="#一、查看源码" class="headerlink" title="一、查看源码"></a>一、查看源码</h4><p>在<code>FBElementCommands.m</code>内有一个获取控件元素属性值的请求，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[[FBRoute GET:@&quot;/element/:uuid/attribute/:name&quot;] respondWithTarget:self</div><div class="line">action:@selector(handleGetAttribute:)],</div></pre></td></tr></table></figure></p>
+<p>查看方法:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line">+ (id&lt;FBResponsePayload&gt;)handleGetAttribute:(FBRouteRequest *)request</div><div class="line">&#123;</div><div class="line">  FBElementCache *elementCache = request.session.elementCache;</div><div class="line">  XCUIElement *element = [elementCache</div><div class="line">  elementForUUID:request.parameters[@&quot;uuid&quot;]];</div><div class="line">  id attributeValue = [element </div><div class="line">  fb_valueForWDAttributeName:request.parameters[@&quot;name&quot;]];</div><div class="line">  attributeValue = attributeValue ?: [NSNull null];</div><div class="line">  return FBResponseWithStatus(FBCommandStatusNoError, attributeValue);</div><div class="line">&#125;</div><div class="line"></div><div class="line">+ (id&lt;FBResponsePayload&gt;)handleGetText:(FBRouteRequest *)request</div><div class="line">&#123;</div><div class="line">  FBElementCache *elementCache = request.session.elementCache;</div><div class="line">  XCUIElement *element = [elementCache </div><div class="line">  elementForUUID:request.parameters[@&quot;uuid&quot;]];</div><div class="line">  id text;</div><div class="line">  if ([element elementType] == XCUIElementTypeStaticText || [element </div><div class="line">    elementType] == XCUIElementTypeButton) &#123;</div><div class="line">    text = [element wdLabel];</div><div class="line">  &#125; else &#123;</div><div class="line">    text = [element wdValue];</div><div class="line">  &#125;</div><div class="line">  text = text ?: [NSNull null];</div><div class="line">  return FBResponseWithStatus(FBCommandStatusNoError, text);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>看的不是很明白，但是确认的是<code>GET</code>请求，<code>uuid</code>为<code>elementid</code>，这里的<code>:name</code>是什么呢？</p>
+<h4 id="二、借鉴appium"><a href="#二、借鉴appium" class="headerlink" title="二、借鉴appium"></a>二、借鉴appium</h4><p>appium也是通过请求进行通信，同样有获取<code>get_attribute()</code>的方法，写个方法，打印出请求地址：<br><code>/element/elementid/attribute/value</code>，此时，已经很简单了，直接命令行发起请求：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">curl -X GET -H &quot;Content-Type: application/json&quot; http://192.168.1.101:8100/</div><div class="line">session/C8C847CF-AD3D-4F5F-B51B-EA67788875DE/element/</div><div class="line">A8C847CF-AD3D-4F5F-B51B-EA677DD885DE/attribute/value</div></pre></td></tr></table></figure></p>
+<p>有正确的返回值：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">    value:True,</div><div class="line">    sessionid:C8C847CF-AD3D-4F5F-B51B-EA67788875DE,</div><div class="line">    status:0</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<h4 id="三、构造方法实现"><a href="#三、构造方法实现" class="headerlink" title="三、构造方法实现"></a>三、构造方法实现</h4><p>现在实现已经很简单了:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">def _property(self, name, data=&apos;&apos;, method=&apos;GET&apos;, timeout=None, eid=None):</div><div class="line">    eid = eid or self.wait(timeout)[&apos;ELEMENT&apos;]</div><div class="line">    return self._request(data, suburl=&apos;element/%s/%s&apos; % (eid, name),</div><div class="line">    method=method)[&apos;value&apos;]</div><div class="line">def attribute(self, name):</div><div class="line">    return self._property(&apos;attribute/%s&apos; % name)</div></pre></td></tr></table></figure></p>
+<p>目前为止，appium功能测试脚本向wda迁移还是比较顺利的。。。。。。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h4 id=&quot;导语&quot;&gt;&lt;a href=&quot;#导语&quot; class=&quot;headerlink&quot; title=&quot;导语&quot;&gt;&lt;/a&gt;导语&lt;/h4&gt;&lt;p&gt;今天继续完成appium功能测试脚本向wda迁移过程中，遇到一个问题，无法获取switch的属性值，因为在此client端当前未有，所以今天
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>iOS自动化实践——WebDriverAgent(五)</title>
+    <link href="http://yoursite.com/2016/08/02/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94WebDriverAgent-%E4%BA%94/"/>
+    <id>http://yoursite.com/2016/08/02/iOS自动化实践——WebDriverAgent-五/</id>
+    <published>2016-08-02T10:14:03.000Z</published>
+    <updated>2016-08-05T01:18:44.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>这两天开始真正开始根据用例写自动化测试脚本，但是遇到了一个问题，特别是当遇到inspector展示的页面控件元素为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">Class:</div><div class="line">Image</div><div class="line">Raw identifier:</div><div class="line">run_history_arrow</div><div class="line">Name:</div><div class="line">run_history_arrow</div><div class="line">Rect:</div><div class="line">&#123;&#123;206.5, 238.5&#125;, &#123;16, 16&#125;&#125;</div><div class="line">isEnabled:</div><div class="line">Yes</div><div class="line">isVisible:</div><div class="line">No</div></pre></td></tr></table></figure></p>
+<p>总是发现使用，自己封装的<code>find_name(text=name,className=classname)</code>找不到控件，为解决这个问题，我感觉自己走了个乌龙，但是我还是记述一下，当做对自己的警醒吧。</p>
+<h4 id="现象是：当控件元素为isVisible-NO时候，无法定位？"><a href="#现象是：当控件元素为isVisible-NO时候，无法定位？" class="headerlink" title="现象是：当控件元素为isVisible=NO时候，无法定位？"></a>现象是：当控件元素为isVisible=NO时候，无法定位？</h4><h4 id="思路一：使用类似于appium中的TouchAction实现。"><a href="#思路一：使用类似于appium中的TouchAction实现。" class="headerlink" title="思路一：使用类似于appium中的TouchAction实现。"></a>思路一：使用类似于appium中的TouchAction实现。</h4><p>1、因为在appium使用过程中，同样的控件，使用<br><code>driver.find_name(&#39;run_history_arrow&#39;).click()</code>是没有效果的，当时是使用类似于<br><code>TouchAction(driver).press(driver.find_name(&#39;run_history_arrow&#39;)).perform()</code><br>实现，因而第一思路是通过方法<code>touch action</code>实现。<br>可是<code>WDA</code>内又没有这样的api，该怎么办呢？<br>想到<code>macaca</code>封装的是<code>WDA</code>，去参考一下<code>macaca</code>是怎么实现的就可以了。<br>由于之前配置过<code>macaca</code>的环境，具体环境配置可见<a href="https://macacajs.github.io/macaca/" target="_blank" rel="external">macaca官方链接</a>。<br>调出<code>macaca</code>的执行用例：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">it(&apos;#1 test&apos;, function() &#123;</div><div class="line"> return driver</div><div class="line">   .sleep(1000)</div><div class="line">   .waitForElementByName(&apos;发现&apos;)</div><div class="line">   .click()</div><div class="line">   .sleep(1000)</div><div class="line">   .performTouchAction(wd.TouchAction.press(</div><div class="line">     driver.waitForElementByName(&apos;智玩&apos;)))</div><div class="line">   .sleep(5000);</div><div class="line"> &#125;);</div></pre></td></tr></table></figure></p>
+<p>发现怎么都执行不成功，也无法查看发起的请求是什么？后来联系了达峰，他告诉我，服务端暂时未实现<br><code>touch action</code>的功能，只能通过在<code>macaca</code>内的代码里大致看到请求格式为:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Post /session/sessionid/touch/perform</div></pre></td></tr></table></figure></p>
+<p>2、既然<code>macaca</code>走不通，就去查看appium的源码，因为<code>appium</code>也封装了<code>touch action</code>，我知道<br><code>appium</code>是完全可执行成功的。<br>在<code>appium</code>内<code>_request</code>打断点，<code>print request</code>等等，终于可以捞出了完全的请求格式：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">curl -X POST -H &quot;Content-Type: application/json&quot; -d &quot;&#123;&quot;actions&quot;: [&#123;&quot;action&quot;:</div><div class="line"> &quot;press&quot;, &quot;elementId&quot;: &quot;4B72992B-0B42-4A14-9127-06F217CAA5DB&quot;&#125;]&#125;&quot; </div><div class="line"> http://192.168.1.101:8100/session/C8C847CF-AD3D-4F5F-B51B-EA67788875DE/touch/</div><div class="line"> perform</div></pre></td></tr></table></figure></p>
+<p>可是奇怪的是，仍然没有起到任何效果，而且获取的返回值<code>status=1</code>显然是一个错误的请求。</p>
+<h4 id="思路二：观察inspector展示的isVisible-NO，思考是否跟此有关？"><a href="#思路二：观察inspector展示的isVisible-NO，思考是否跟此有关？" class="headerlink" title="思路二：观察inspector展示的isVisible=NO，思考是否跟此有关？"></a>思路二：观察inspector展示的<code>isVisible=NO</code>，思考是否跟此有关？</h4><p>1、看到<code>isVisible=NO</code>的都无法定位，但是只要是<code>isVisible=YES</code>的却都可以点击触发。<br>所以尝试通过<code>xcode</code>更改<code>isVisible=NO</code>的属性，查看了大量的链接和咨询了开发，无法给出定论说如何更改此属性，我显示有点儿灰心。。。。<br>2、尝试通过自己发起请求来定位此控件，发现竟然有返回值：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">  &quot;value&quot; : [</div><div class="line">    &#123;</div><div class="line">      &quot;ELEMENT&quot; : &quot;0BCEDAB9-66DE-413B-B78D-4AF15C67476A&quot;,</div><div class="line">      &quot;type&quot; : &quot;XCUIElementTypeImage&quot;,</div><div class="line">      &quot;label&quot; : null</div><div class="line">    &#125;</div><div class="line">  ],</div><div class="line">  &quot;sessionId&quot; : &quot;8BFE332C-4954-4F5C-BAAA-330DCD49E61E&quot;,</div><div class="line">  &quot;status&quot; : 0</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>这个时候才注意到，label值为空，突然联想到之前封装的<code>client</code>端有一句代码是:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">if self._text and elem.get(&apos;label&apos;) != self._text:        </div><div class="line">     continue</div></pre></td></tr></table></figure></p>
+<p>我立马恍然，原来是自己走了弯路，封装错了。</p>
+<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>其实很简单，只是注销这一句<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">if self._text and elem.get(&apos;label&apos;) != self._text:        </div><div class="line">     continue</div></pre></td></tr></table></figure></p>
+<p>程序可以执行成功。<br>好吧，我浪费了将近两天的时间，功能自动化测试继续。。。。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;这两天开始真正开始根据用例写自动化测试脚本，但是遇到了一个问题，特别是当遇到inspector展示的页面控件元素为：&lt;br&gt;&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div cla
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>iOS自动化实践——WebDriverAgent(四)</title>
+    <link href="http://yoursite.com/2016/07/29/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94WebDriverAgent-%E5%9B%9B/"/>
+    <id>http://yoursite.com/2016/07/29/iOS自动化实践——WebDriverAgent-四/</id>
+    <published>2016-07-29T00:45:35.000Z</published>
+    <updated>2016-08-08T10:38:30.000Z</updated>
+    
+    <content type="html"><![CDATA[<h4 id="导语"><a href="#导语" class="headerlink" title="导语"></a>导语</h4><p>一直在强调<code>WebDriverAgent</code>作为server端，通过USB和手机进行通信，那么client如何触发点击的呢？正好通过xpath定位方式的编写，可以让我们熟悉这个流程。<br>借助wda可以实现定位和跨应用，仔细看了wda的api，发现缺少xpath定位的方式，再到WebDriverAgent源码可以看到，有xpath的定位api，决定给wda添加xpath定位方式。</p>
+<hr>
+<h4 id="一、开始"><a href="#一、开始" class="headerlink" title="一、开始"></a>一、开始</h4><p>先查看api，可以参考<a href="https://diaojunxian.github.io/2016/07/24/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94WebDriverAgent-%E4%BA%8C/" target="_blank" rel="external">WebDriverAgent(二)</a><br>或者直接进入<a href="https://github.com/facebook/WebDriverAgent/wiki/Queries" target="_blank" rel="external">WebDriverAgent Wiki</a>。<br>确认<code>xpath api</code>，然后开始动手。</p>
+<h4 id="二、mac终端curl命令"><a href="#二、mac终端curl命令" class="headerlink" title="二、mac终端curl命令"></a>二、mac终端curl命令</h4><p>第一步：需要先手动启动xcode schemes，选择<code>WebDriverAgentRunner</code>，Test启动<br><code>WebDriverAgent</code>以后。手动启动app应用。<br>第二步：获取<code>session id</code>。<br>终端命令行输入<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">curl -X GET -H &quot;Content-Type: application/json&quot; http://192.168.1.101:8100/source</div></pre></td></tr></table></figure></p>
+<p>返回值的最后可以看到<code>sessionId</code>，作为下一步xpath使用。<br>第三步：调用<code>xpath api</code>。<br>终端命令行输入<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">curl -X POST -H &quot;Content-Type: application/json&quot; \-d &quot;&#123;\&quot;using\&quot;:\&quot;xpath\&quot;,\&quot;value\&quot;:\&quot;//XCUIElementTypeCell[1]/XCUIElementTypeStaticText\&quot;&#125;&quot; \http://192.168.1.101:8100/session/sessionId/elements</div></pre></td></tr></table></figure></p>
+<p>返回值是一个字典形式：可以看到status为0，且有value不为空。这里的status为0代表是正常的请求。<br>可以看到请求成功了</p>
+<h4 id="三、用python实现请求"><a href="#三、用python实现请求" class="headerlink" title="三、用python实现请求"></a>三、用python实现请求</h4><p>在<code>wda</code>作者封装了<code>name</code>和<code>classname</code>定位，很简单直接在方法里添加，最初思路考虑到使用<br><code>wda</code>用户的使用<code>xpath</code>定位的习惯，有两种形式:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">(1)//Button/Cell[@name=&apos;1111&apos;]</div><div class="line">(2)//*/Button/Cell/Button/Cell</div></pre></td></tr></table></figure>
+<p><strong>1、直接使用replace替换</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">if xpath and not xpath.startswith(&apos;//XCUIElementType&apos;):</div><div class="line">    if not xpath.startswith(&apos;//&apos;):</div><div class="line">        self._xpath = &apos;//&apos;+(&apos;XCUIElementType&apos;+xpath).replace(&apos;/&apos;, &apos;/</div><div class="line">        XCUIElementType&apos;)</div><div class="line">    elif xpath.startswith(&apos;//*&apos;):</div><div class="line">        self._xpath = &apos;//*&apos;+(&apos;XCUIElementType&apos;+xpath[3:]).replace(&apos;/&apos;,&apos;/</div><div class="line">        XCUIElementType&apos;)</div><div class="line">    elif xpath.startswith(&apos;//&apos;):</div><div class="line">        self._xpath = &apos;/&apos;+xpath[1:].replace(&apos;/&apos;,&apos;/XCUIElementType&apos;)</div></pre></td></tr></table></figure>
+<p>代码显得凌乱，可读性差。</p>
+<p><strong>2、决定修改</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">if xpath and not xpath.startswith(&apos;//XCUIElementType&apos;):</div><div class="line"></div><div class="line">    if xpath.startswith(&apos;//*&apos;):</div><div class="line">        xpath = xpath[3:]</div><div class="line">    else:</div><div class="line">        if xpath.startswith(&apos;//&apos;):</div><div class="line">            xpath = xpath[2:]</div><div class="line">        elif xpath.startswith(&apos;/&apos;):</div><div class="line">            xpath = xpath[1:]</div><div class="line">    xpath = re.split(&apos;/&apos;, xpath)</div><div class="line">    self._xpath = &apos;//XCUIElementType&apos;+(&apos;/XCUIElementType&apos;.join(xpath))</div></pre></td></tr></table></figure>
+<p>开源作者提意见是不希望有判断(<code>if else</code>)存在</p>
+<p><strong>3、用正则</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">if xpath and not xpath.startswith(&apos;//XCUIElementType&apos;):</div><div class="line">    element =  &apos;|&apos;.join(xcui_element_types.xcui_element)</div><div class="line">    self._xpath = re.sub(r&apos;/(&apos;+element+&apos;)&apos;, &apos;/XCUIElementType\g&lt;1&gt;&apos;, xpath)</div></pre></td></tr></table></figure>
+<p>看了官方源码有<a href="https://github.com/facebook/WebDriverAgent/blob/6816e09583c46655e7b7650df84641c64b2b5fdf/WebDriverAgentLib/Utilities/FBElementTypeTransformer.m" target="_blank" rel="external">iOS控件库</a>，把所有可能的控件形式穷举出来，然后用<code>sub</code>匹配替换。<br>终于完成，提交给开源作者审核</p>
+<p>To be continued soon……</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h4 id=&quot;导语&quot;&gt;&lt;a href=&quot;#导语&quot; class=&quot;headerlink&quot; title=&quot;导语&quot;&gt;&lt;/a&gt;导语&lt;/h4&gt;&lt;p&gt;一直在强调&lt;code&gt;WebDriverAgent&lt;/code&gt;作为server端，通过USB和手机进行通信，那么client如何触发点击的
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Git使用——在github上给开源项目贡献代码</title>
+    <link href="http://yoursite.com/2016/07/28/git%E4%BD%BF%E7%94%A8%E2%80%94%E2%80%94%E5%9C%A8github%E4%B8%8A%E7%BB%99%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE%E8%B4%A1%E7%8C%AE%E4%BB%A3%E7%A0%81/"/>
+    <id>http://yoursite.com/2016/07/28/git使用——在github上给开源项目贡献代码/</id>
+    <published>2016-07-28T08:40:44.000Z</published>
+    <updated>2016-08-05T01:16:24.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在使用github的过程中，git clone了一个开源项目以后，当我们想给这个开源的工程如何贡献<br>代码呢？<br>现拿WebDriverAgent项目贡献代码举例，小白教程开始。。。。。。</p>
+<h3 id="Fork该项目"><a href="#Fork该项目" class="headerlink" title="Fork该项目"></a>Fork该项目</h3><p>由于最初只是<code>git clone</code>了该项目，如果需要贡献代码，则先需要<code>rm -rf</code>干掉本地的项目，这个时候来到该开源项目下，点击<code>fork</code>.<img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/fork.jpg" alt="Fork项目"><br>这个时候再<code>git clone</code>该项目，<code>https://github.com/diaojunxian/facebook-wda.git</code>，可以发现地址已经变了，而不再是最初的<code>https://github.com/openatx/facebook-wda.git</code></p>
+<h3 id="修改"><a href="#修改" class="headerlink" title="修改"></a>修改</h3><p>在本地完成修改以后，然后就可以走熟悉的提交流程：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">git add .</div><div class="line">git commit -m &apos;修改&apos;</div><div class="line">git push origin master</div></pre></td></tr></table></figure></p>
+<p>提交以后，不会提示<code>permission denied</code>的报错。</p>
+<h3 id="Pull-Requests"><a href="#Pull-Requests" class="headerlink" title="Pull Requests"></a>Pull Requests</h3><p>回到最初<code>clone</code>项目的<code>github</code>地址，可以看到页面多了一条记录，点击<code>New Pull Requests</code>，<br>然后确认一下提交，好了，你的任务就完成了，等到开源项目的管理人员审核，通过了，他就把你的改动合并到相应的开发分支上。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在使用github的过程中，git clone了一个开源项目以后，当我们想给这个开源的工程如何贡献&lt;br&gt;代码呢？&lt;br&gt;现拿WebDriverAgent项目贡献代码举例，小白教程开始。。。。。。&lt;/p&gt;
+&lt;h3 id=&quot;Fork该项目&quot;&gt;&lt;a href=&quot;#Fork该项目
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>iOS自动化实践——WebDriverAgent(三)</title>
+    <link href="http://yoursite.com/2016/07/26/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94WebDriverAgent-%E4%B8%89/"/>
+    <id>http://yoursite.com/2016/07/26/iOS自动化实践——WebDriverAgent-三/</id>
+    <published>2016-07-26T05:46:45.000Z</published>
+    <updated>2016-08-05T01:17:48.000Z</updated>
+    
+    <content type="html"><![CDATA[<h4 id="导语"><a href="#导语" class="headerlink" title="导语"></a>导语</h4><hr>
+<p>之前用过js封装的WebDriverAgent的macaca，然后就一直想尝鲜WebDriverAgent-python封装的client端，不经意间知道了网易大神写的WebDriverAgent-python，他叫它为wda。<a href="https://github.com/openatx/facebook-wda" target="_blank" rel="external">wda传送门</a><br>纯python封装，那么该如何使用呢？</p>
+<hr>
+<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><p>第一步：需要下载WebDriverAgent工程，它是一个开源工程。<br>下载<code>git clone https://github.com/openatx/facebook-wda</code></p>
+<p>第二步：安装python的client端，有两种方式。</p>
+<ol>
+<li>直接<code>pip install --pre facebook-wda</code></li>
+<li><code>git clone https://github.com/openatx/facebook-wda.git</code><br>然后<code>cd 到facebook-wda</code>，用<code>python setup.py install</code>安装</li>
+</ol>
+<h3 id="开始使用"><a href="#开始使用" class="headerlink" title="开始使用"></a>开始使用</h3><p>第一步：启动服务<br>用xcode打开工程，启动Test，建立连接，或者命令行启动<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">UDID=$(idevice_id -l) </div><div class="line">xcodebuild -project WebDriverAgent.xcodeproj \-scheme WebDriverAgentRunner </div><div class="line">\-destination &quot;id=$UDID&quot; test</div></pre></td></tr></table></figure></p>
+<p>确认服务启动以后，如何确认？<br><strong>方法</strong>将mac和手机设备置于同一网段下，然后启动WebDriverAgent工程，选择Test，然后看xcode console，可以看到一个ServerURLHere指向<code>http://192.168.1.1:8100</code></p>
+<p>第二步：那么怎么使用这个库呢？</p>
+<p>1、首先可以看作者的<code>README.md</code></p>
+<p>2、可以看到需要先建立一个<code>client</code>，然后建立<code>session</code>建立session以后就类似于启动一个应用，<br>这个时候就可以在应用里面进行操作。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">import wda</div><div class="line"></div><div class="line">driver = wda.Client(&apos;http://192.168.1.101:8100&apos;)</div><div class="line"></div><div class="line"># 跳转新浪应用</div><div class="line">sina_session = driver.session(&apos;com.sina.weibo&apos;)</div></pre></td></tr></table></figure></p>
+<p>3、在应用里面操作控件，怎么查看控件定位信息呢？<br>在浏览器打开<code>http://192.168.1.101:8100/inspector</code>，具体使用可以看<a href="https://diaojunxian.github.io/2016/07/22/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95%E2%80%94%E2%80%94WebDriverAgent/" target="_blank" rel="external">iOS自动化实践——WebDrierAgent(一)</a><br>4、知道控件以后，就可以使用click或者send_keys了，这里应该这么用。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">sina_session(text=&quot;Dashboard&quot;, className=&apos;Button&apos;).tap()</div><div class="line"></div><div class="line"># Set text</div><div class="line">sina_session(text=&quot;Name&quot;).set_text(&quot;Hello&quot;)</div><div class="line"></div><div class="line"># Clear text</div><div class="line">sina_session(text=&quot;Name&quot;).clear_text()</div></pre></td></tr></table></figure></p>
+<p>5、最后我把我编写的简单用例脚本放出来，很简单，可执行。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">import wda</div><div class="line"></div><div class="line">driver = wda.Client(&apos;http://192.168.1.101:8100&apos;)</div><div class="line"></div><div class="line"># 跳转新浪应用</div><div class="line">sina_session = driver.session(&apos;com.sina.weibo&apos;)</div><div class="line"># 取得屏幕大小</div><div class="line">size = sina_session.window_size()</div><div class="line">print size</div><div class="line"></div><div class="line"># 点击发现按钮</div><div class="line">sina_session(text=u&apos;发现&apos;,className=&apos;Button&apos;).tap()</div><div class="line"></div><div class="line"># 跳转到设置应用</div><div class="line">setting_session = driver.session(&apos;com.apple.Preferences&apos;)</div><div class="line"># 点击通知按钮</div><div class="line">setting_session(text=u&apos;通知&apos;, className=&apos;Cell&apos;).tap()</div></pre></td></tr></table></figure></p>
+<h3 id="下一步"><a href="#下一步" class="headerlink" title="下一步"></a>下一步</h3><p>WebDriverAgent最吸引我的是可以非常简便实现类似于安卓形式的跨应用，之前折腾了许久想要自己实现封装，现在正好可以借助前人的肩膀，下一步封装，使得脚本形成类似于appium的样式。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h4 id=&quot;导语&quot;&gt;&lt;a href=&quot;#导语&quot; class=&quot;headerlink&quot; title=&quot;导语&quot;&gt;&lt;/a&gt;导语&lt;/h4&gt;&lt;hr&gt;
+&lt;p&gt;之前用过js封装的WebDriverAgent的macaca，然后就一直想尝鲜WebDriverAgent-python封装的cl
+    
+    </summary>
+    
+    
+  </entry>
+  
+</feed>

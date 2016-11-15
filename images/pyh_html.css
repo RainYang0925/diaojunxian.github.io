@@ -1,0 +1,94 @@
+body {
+	font-family: Helvetica, Arial, sans-serif;
+	font-size: 12px;
+	min-width: 1200px;
+	color: #4F4F4F;
+}
+h2 {
+	font-size: 16px;
+	color: black;
+}
+
+p {
+    color: black;
+}
+
+a {
+	color: #4F4F4F;
+}
+
+#environment td {
+	padding: 5px;
+	border: 1px solid #4F4F4F;
+	text-align: center;
+}
+#environment {
+	width: 30%;
+}
+
+#environment tr:nth-child(odd) {
+	background-color: #ADD8E6;
+}
+
+table{
+    border-collapse: collapse;
+	border: 1px solid #4F4F4F;
+	color: #8d8d8d;
+	font-size: 12px;
+	width:100%;
+}
+table#table_id{
+	width:80%;
+}
+table th ,table td{
+	padding: 5px;
+	border: 1px solid #4F4F4F;
+	text-align: left
+}
+table th {
+	font-weight: bold
+}
+table#env_id{
+	width:50%;
+}
+table#summary_id{
+	width:40%;
+}
+/*table#table_id table#table_id tr th:nth-child(8),table#table_id td:nth-child(8){
+	width:30%;
+}*/
+table#table_id tr td.detail_info_graph,table#table_id tr th.detail_info_graph{
+	width:30%;
+}
+table#table_id tr td.detail_info_message{
+	width:40%;
+}
+table#table_id tr td.detail_info_test{
+	width:30%;
+}
+table#table_id tr td.detail_info_result{
+	width:10%;
+}
+table#table_id td img{
+	height:80px;
+}
+table#table_id td.Pass{
+	color:green;
+	text-transform: capitalize;
+}
+table#table_id td.Error{
+	color:red;
+	text-transform: capitalize;
+}
+table#table_id td.Failure{
+	color:red;
+	text-transform: capitalize;
+}
+table#table_id td.Skipped{
+	color:orange;
+	text-transform: capitalize;
+}
+div#test{
+	width: 100%;
+	height: 130px;
+}
