@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2016-11-04T07:36:48.000Z</updated>
+  <updated>2016-11-15T11:32:41.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,36 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>持续集成实施(九)</title>
+    <link href="http://yoursite.com/2016/11/15/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E5%AE%9E%E6%96%BD-%E4%B9%9D/"/>
+    <id>http://yoursite.com/2016/11/15/持续集成实施-九/</id>
+    <published>2016-11-15T09:21:03.000Z</published>
+    <updated>2016-11-15T11:32:41.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>今天记录为mac下终端命令行设置代理的过程，为了下载pod，为了下载pod，为了下载pod，参考了杨占领分享的北京同事写的，sxiaojian.com/2016/07/04/terminal-shadowsocks/，过程是类似的但是，我按照他的流程没有走通。。。不知道是哪里设置错了反正按照下面的流程我走通了。。。。</p>
+<hr>
+<h3 id="一、shadowsocks下载使用"><a href="#一、shadowsocks下载使用" class="headerlink" title="一、shadowsocks下载使用"></a>一、shadowsocks下载使用</h3><p>官方下载就好，对了这里提一下，我花了5块钱，购买了5天体验版。。。。</p>
+<h3 id="二、ProxyChains-NG"><a href="#二、ProxyChains-NG" class="headerlink" title="二、ProxyChains-NG"></a>二、ProxyChains-NG</h3><h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p>使用 Homebrew 安装<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">brew install proxychains-ng</div></pre></td></tr></table></figure></p>
+<h4 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h4><p>编辑配置文件<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo vim /usr/local/Cellar/proxychains-ng/4.11/etc/proxychains.conf</div></pre></td></tr></table></figure></p>
+<p>在 [ProxyList] 下面（也就是末尾）加入代理类型，代理地址和端口<br>注释掉原来的代理并添加<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">socks5  127.0.0.1 1080</div></pre></td></tr></table></figure></p>
+<p>ps: 默认的socks4 127.0.0.1 9095是tor代理，而socks5 127.0.0.1 1080是shadowsocks的代理。</p>
+<p>默认是：<br>strict_chain - 按照后面列表中出现的代理服务器的先后顺序组成一条链，要求所有的代理服务器都是有效的。</p>
+<p>ps: 4.10 是proxychains-ng的版本好，具体参看自己的版本。<br>测试：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">proxychains4 curl www.google.com</div></pre></td></tr></table></figure></p>
+<h3 id="强调一下：Mac-OS-10-11-恢复模式下-关闭-SIP"><a href="#强调一下：Mac-OS-10-11-恢复模式下-关闭-SIP" class="headerlink" title="强调一下：Mac OS 10.11 恢复模式下 关闭 SIP"></a>强调一下：Mac OS 10.11 恢复模式下 关闭 SIP</h3><p>其实我在之前的持续集成（六）已经提到过。<br>Command ＋ R 进入恢复模式，选择Terminal 执行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">csrutil disenable --without debug</div><div class="line"></div><div class="line">Apple Internal: enabled</div><div class="line">Kext Signing: enabled</div><div class="line">Filesystem Protections: enabled</div><div class="line">Debugging Restrictions: enabled</div><div class="line">DTrace Restrictions: enabled</div><div class="line">NVRAM Protections: enabled</div></pre></td></tr></table></figure></p>
+<p>disable 是把 5 个都关了。。。<br>目测 proxychains 之类的需要加入 LD_PRELOAD 进行动态 HOOK<br>debug 那个就是保护了关键路径上的 bin 不被劫持<br>其他都是字面意思<br>保护的只有 rootless.conf 定义的目录文件</p>
+<p>后来下载通过proxychains4 pod install –verbose成功了。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;今天记录为mac下终端命令行设置代理的过程，为了下载pod，为了下载pod，为了下载pod，参考了杨占领分享的北京同事写的，sxiaojian.com/2016/07/04/terminal-shadowsocks/，过程是类似的但是，我按照他的流程没有走通。。。不知道是哪
+    
+    </summary>
+    
+    
+  </entry>
   
   <entry>
     <title>持续集成实施(八)</title>
@@ -600,42 +630,6 @@
     
       &lt;p&gt;在使用github的过程中，git clone了一个开源项目以后，当我们想给这个开源的工程如何贡献&lt;br&gt;代码呢？&lt;br&gt;现拿WebDriverAgent项目贡献代码举例，小白教程开始。。。。。。&lt;/p&gt;
 &lt;h3 id=&quot;Fork该项目&quot;&gt;&lt;a href=&quot;#Fork该项目
-    
-    </summary>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>iOS自动化实践——WebDriverAgent(三)</title>
-    <link href="http://yoursite.com/2016/07/26/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94WebDriverAgent-%E4%B8%89/"/>
-    <id>http://yoursite.com/2016/07/26/iOS自动化实践——WebDriverAgent-三/</id>
-    <published>2016-07-26T05:46:45.000Z</published>
-    <updated>2016-08-05T01:17:48.000Z</updated>
-    
-    <content type="html"><![CDATA[<h4 id="导语"><a href="#导语" class="headerlink" title="导语"></a>导语</h4><hr>
-<p>之前用过js封装的WebDriverAgent的macaca，然后就一直想尝鲜WebDriverAgent-python封装的client端，不经意间知道了网易大神写的WebDriverAgent-python，他叫它为wda。<a href="https://github.com/openatx/facebook-wda" target="_blank" rel="external">wda传送门</a><br>纯python封装，那么该如何使用呢？</p>
-<hr>
-<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><p>第一步：需要下载WebDriverAgent工程，它是一个开源工程。<br>下载<code>git clone https://github.com/openatx/facebook-wda</code></p>
-<p>第二步：安装python的client端，有两种方式。</p>
-<ol>
-<li>直接<code>pip install --pre facebook-wda</code></li>
-<li><code>git clone https://github.com/openatx/facebook-wda.git</code><br>然后<code>cd 到facebook-wda</code>，用<code>python setup.py install</code>安装</li>
-</ol>
-<h3 id="开始使用"><a href="#开始使用" class="headerlink" title="开始使用"></a>开始使用</h3><p>第一步：启动服务<br>用xcode打开工程，启动Test，建立连接，或者命令行启动<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">UDID=$(idevice_id -l) </div><div class="line">xcodebuild -project WebDriverAgent.xcodeproj \-scheme WebDriverAgentRunner </div><div class="line">\-destination &quot;id=$UDID&quot; test</div></pre></td></tr></table></figure></p>
-<p>确认服务启动以后，如何确认？<br><strong>方法</strong>将mac和手机设备置于同一网段下，然后启动WebDriverAgent工程，选择Test，然后看xcode console，可以看到一个ServerURLHere指向<code>http://192.168.1.1:8100</code></p>
-<p>第二步：那么怎么使用这个库呢？</p>
-<p>1、首先可以看作者的<code>README.md</code></p>
-<p>2、可以看到需要先建立一个<code>client</code>，然后建立<code>session</code>建立session以后就类似于启动一个应用，<br>这个时候就可以在应用里面进行操作。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">import wda</div><div class="line"></div><div class="line">driver = wda.Client(&apos;http://192.168.1.101:8100&apos;)</div><div class="line"></div><div class="line"># 跳转新浪应用</div><div class="line">sina_session = driver.session(&apos;com.sina.weibo&apos;)</div></pre></td></tr></table></figure></p>
-<p>3、在应用里面操作控件，怎么查看控件定位信息呢？<br>在浏览器打开<code>http://192.168.1.101:8100/inspector</code>，具体使用可以看<a href="https://diaojunxian.github.io/2016/07/22/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95%E2%80%94%E2%80%94WebDriverAgent/" target="_blank" rel="external">iOS自动化实践——WebDrierAgent(一)</a><br>4、知道控件以后，就可以使用click或者send_keys了，这里应该这么用。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">sina_session(text=&quot;Dashboard&quot;, className=&apos;Button&apos;).tap()</div><div class="line"></div><div class="line"># Set text</div><div class="line">sina_session(text=&quot;Name&quot;).set_text(&quot;Hello&quot;)</div><div class="line"></div><div class="line"># Clear text</div><div class="line">sina_session(text=&quot;Name&quot;).clear_text()</div></pre></td></tr></table></figure></p>
-<p>5、最后我把我编写的简单用例脚本放出来，很简单，可执行。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">import wda</div><div class="line"></div><div class="line">driver = wda.Client(&apos;http://192.168.1.101:8100&apos;)</div><div class="line"></div><div class="line"># 跳转新浪应用</div><div class="line">sina_session = driver.session(&apos;com.sina.weibo&apos;)</div><div class="line"># 取得屏幕大小</div><div class="line">size = sina_session.window_size()</div><div class="line">print size</div><div class="line"></div><div class="line"># 点击发现按钮</div><div class="line">sina_session(text=u&apos;发现&apos;,className=&apos;Button&apos;).tap()</div><div class="line"></div><div class="line"># 跳转到设置应用</div><div class="line">setting_session = driver.session(&apos;com.apple.Preferences&apos;)</div><div class="line"># 点击通知按钮</div><div class="line">setting_session(text=u&apos;通知&apos;, className=&apos;Cell&apos;).tap()</div></pre></td></tr></table></figure></p>
-<h3 id="下一步"><a href="#下一步" class="headerlink" title="下一步"></a>下一步</h3><p>WebDriverAgent最吸引我的是可以非常简便实现类似于安卓形式的跨应用，之前折腾了许久想要自己实现封装，现在正好可以借助前人的肩膀，下一步封装，使得脚本形成类似于appium的样式。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;h4 id=&quot;导语&quot;&gt;&lt;a href=&quot;#导语&quot; class=&quot;headerlink&quot; title=&quot;导语&quot;&gt;&lt;/a&gt;导语&lt;/h4&gt;&lt;hr&gt;
-&lt;p&gt;之前用过js封装的WebDriverAgent的macaca，然后就一直想尝鲜WebDriverAgent-python封装的cl
     
     </summary>
     
