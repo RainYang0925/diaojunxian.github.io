@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2016-11-15T11:32:41.000Z</updated>
+  <updated>2016-11-17T07:29:23.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,37 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>持续集成实施(十)——Oclint</title>
+    <link href="http://yoursite.com/2016/11/17/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E5%AE%9E%E6%96%BD-%E2%80%94%E2%80%94Oclint/"/>
+    <id>http://yoursite.com/2016/11/17/持续集成实施-——Oclint/</id>
+    <published>2016-11-17T07:21:53.000Z</published>
+    <updated>2016-11-17T07:29:23.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>OCLint是一个强大的静态代码分析工具，可以用来提高代码质量，查找潜在的bug，主要针对c,c++和Objective-c的静态分析。功能非常强大。<br>目前只是简单使用，浮于表面。。。。。</p>
+<h3 id="1、oclint-与-xcpretty的安装"><a href="#1、oclint-与-xcpretty的安装" class="headerlink" title="1、oclint 与 xcpretty的安装"></a>1、oclint 与 xcpretty的安装</h3><p>推荐是用Homebrew 来安装，快速且节省精力，也可以选择源码安装或者release包来安装，不过需要配置环境变量的内容。使用Homebrew 安装时，需要先设置brew的第三方仓库，然后安装，xcpretty 用于解析xcodebuild 构建日志，解析后的结果交给oclint来使用：<br>oclint的安装：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">brew tap oclint/formulae</div><div class="line">brew install oclint</div></pre></td></tr></table></figure></p>
+<p>xcpretty的安装：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo gem install xcpretty</div></pre></td></tr></table></figure></p>
+<h3 id="2、构建与静态代码扫描"><a href="#2、构建与静态代码扫描" class="headerlink" title="2、构建与静态代码扫描"></a>2、构建与静态代码扫描</h3><h4 id="1）、构建与解析日志"><a href="#1）、构建与解析日志" class="headerlink" title="1）、构建与解析日志"></a>1）、构建与解析日志</h4><p>我们使用xcodebuild 来构建。</p>
+<p>xcodebuild 默认构建的格式Release ，需要构建Debug 或者 AdHoc 包自行添加相关参数来执行。build之后，使用xcpretty 来解析编译日志。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">CODE_SIGN_IDENTITY=&quot;xxx&quot;</div><div class="line"></div><div class="line">DEVELOPER_DIR=&quot;/Applications/Xcode7.app&quot; xcodebuild CODE_SIGN_IDENTITY=$&#123;CODE_SIGN_IDENTITY&#125; clean</div><div class="line"></div><div class="line">DEVELOPER_DIR=&quot;/Applications/Xcode7.app&quot; xcodebuild CODE_SIGN_IDENTITY=$&#123;CODE_SIGN_IDENTITY&#125; | xcpretty -r json-compilation-database</div><div class="line"></div><div class="line">cp build/reports/compilation_db.json compile_commands.json</div></pre></td></tr></table></figure></p>
+<p>-r json-compilation-database 制定的数据的输出格式为json格式。输出的数据为build/reports/compilation_db.json</p>
+<h4 id="2）、解析结果使用oclint做扫描"><a href="#2）、解析结果使用oclint做扫描" class="headerlink" title="2）、解析结果使用oclint做扫描"></a>2）、解析结果使用oclint做扫描</h4><p>使用oclint时需要将build/reports/compilation_db.json 重新命名为 compile_commands.json 并移动至当前目录。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">oclint-json-compilation-database -e Pods -- -o=lint.xml -report-type=pmd -stats -max-priority-1=9999 -max-priority-2=9999 -max-priority-3=9999 </div><div class="line">-rc LONG_LINE=500 -rc LONG_VARIABLE_NAME=100</div></pre></td></tr></table></figure></p>
+<p>将结果输出格式为pmd 格式，然后通过jenkins的pmd插件就可以做结果的展示了。</p>
+<h4 id="3）、oclint其它参数"><a href="#3）、oclint其它参数" class="headerlink" title="3）、oclint其它参数"></a>3）、oclint其它参数</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line">-e   Pods   去掉依赖的第三方库的扫描</div><div class="line"></div><div class="line">-- -rc=LONG_LINE=200  改变默认函数行数为100</div><div class="line"></div><div class="line">LINT_DISABLE_RULES=\&quot;-disable-rule=LongClass \\  </div><div class="line"></div><div class="line">            -disable-rule=LongLine \\  </div><div class="line"></div><div class="line">            -disable-rule=LongMethod \\  </div><div class="line"></div><div class="line">            -disable-rule=LongVariableName \\  </div><div class="line"></div><div class="line">            -disable-rule=ShortVariableName \\  </div><div class="line"></div><div class="line">            -disable-rule=HighNcssMethod \\  </div><div class="line"></div><div class="line">            -disable-rule=DeepNestedBlock \\  </div><div class="line"></div><div class="line">            -disable-rule=TooManyFields \\  </div><div class="line"></div><div class="line">            -disable-rule=TooManyMethods \\  </div><div class="line"></div><div class="line">            -disable-rule=TooManyParameters \\  </div><div class="line"></div><div class="line">            -disable-rule=IvarAssignmentOutsideAccessorsOrInit\&quot;</div></pre></td></tr></table></figure>
+<p>命令行最后加入 $LINT_DISBALE_RULES 可以禁用某些不需要的规则</p>
+<h3 id="3、中间出现的问题"><a href="#3、中间出现的问题" class="headerlink" title="3、中间出现的问题"></a>3、中间出现的问题</h3><h4 id="1）oclint-error-violations-exceed-threshold"><a href="#1）oclint-error-violations-exceed-threshold" class="headerlink" title="1）oclint: error: violations exceed threshold"></a>1）oclint: error: violations exceed threshold</h4><p>调研之后确认是我们的代码错误多，超过了阈值，所以调大了-max-priority-1=9999 -max-priority-2=9999 -max-priority-3=9999 </p>
+<h4 id="2-出现了code-sign错误"><a href="#2-出现了code-sign错误" class="headerlink" title="2)出现了code sign错误"></a>2)出现了code sign错误</h4><p>在xcodebuild后面加上参数 CODE_SIGN_IDENTITY就行了。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;OCLint是一个强大的静态代码分析工具，可以用来提高代码质量，查找潜在的bug，主要针对c,c++和Objective-c的静态分析。功能非常强大。&lt;br&gt;目前只是简单使用，浮于表面。。。。。&lt;/p&gt;
+&lt;h3 id=&quot;1、oclint-与-xcpretty的安装&quot;&gt;&lt;a 
+    
+    </summary>
+    
+    
+  </entry>
   
   <entry>
     <title>持续集成实施(九)</title>
@@ -609,30 +640,6 @@
     <summary type="html">
     
       &lt;h4 id=&quot;导语&quot;&gt;&lt;a href=&quot;#导语&quot; class=&quot;headerlink&quot; title=&quot;导语&quot;&gt;&lt;/a&gt;导语&lt;/h4&gt;&lt;p&gt;一直在强调&lt;code&gt;WebDriverAgent&lt;/code&gt;作为server端，通过USB和手机进行通信，那么client如何触发点击的
-    
-    </summary>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>Git使用——在github上给开源项目贡献代码</title>
-    <link href="http://yoursite.com/2016/07/28/git%E4%BD%BF%E7%94%A8%E2%80%94%E2%80%94%E5%9C%A8github%E4%B8%8A%E7%BB%99%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE%E8%B4%A1%E7%8C%AE%E4%BB%A3%E7%A0%81/"/>
-    <id>http://yoursite.com/2016/07/28/git使用——在github上给开源项目贡献代码/</id>
-    <published>2016-07-28T08:40:44.000Z</published>
-    <updated>2016-08-05T01:16:24.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>在使用github的过程中，git clone了一个开源项目以后，当我们想给这个开源的工程如何贡献<br>代码呢？<br>现拿WebDriverAgent项目贡献代码举例，小白教程开始。。。。。。</p>
-<h3 id="Fork该项目"><a href="#Fork该项目" class="headerlink" title="Fork该项目"></a>Fork该项目</h3><p>由于最初只是<code>git clone</code>了该项目，如果需要贡献代码，则先需要<code>rm -rf</code>干掉本地的项目，这个时候来到该开源项目下，点击<code>fork</code>.<img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/fork.jpg" alt="Fork项目"><br>这个时候再<code>git clone</code>该项目，<code>https://github.com/diaojunxian/facebook-wda.git</code>，可以发现地址已经变了，而不再是最初的<code>https://github.com/openatx/facebook-wda.git</code></p>
-<h3 id="修改"><a href="#修改" class="headerlink" title="修改"></a>修改</h3><p>在本地完成修改以后，然后就可以走熟悉的提交流程：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">git add .</div><div class="line">git commit -m &apos;修改&apos;</div><div class="line">git push origin master</div></pre></td></tr></table></figure></p>
-<p>提交以后，不会提示<code>permission denied</code>的报错。</p>
-<h3 id="Pull-Requests"><a href="#Pull-Requests" class="headerlink" title="Pull Requests"></a>Pull Requests</h3><p>回到最初<code>clone</code>项目的<code>github</code>地址，可以看到页面多了一条记录，点击<code>New Pull Requests</code>，<br>然后确认一下提交，好了，你的任务就完成了，等到开源项目的管理人员审核，通过了，他就把你的改动合并到相应的开发分支上。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;在使用github的过程中，git clone了一个开源项目以后，当我们想给这个开源的工程如何贡献&lt;br&gt;代码呢？&lt;br&gt;现拿WebDriverAgent项目贡献代码举例，小白教程开始。。。。。。&lt;/p&gt;
-&lt;h3 id=&quot;Fork该项目&quot;&gt;&lt;a href=&quot;#Fork该项目
     
     </summary>
     
