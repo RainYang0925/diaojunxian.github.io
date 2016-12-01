@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2016-12-01T01:00:46.000Z</updated>
+  <updated>2016-12-01T01:04:08.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,18 +20,18 @@
     <link href="http://yoursite.com/2016/12/01/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E5%AE%9E%E6%96%BD-%E5%8D%81%E4%BA%8C-%E2%80%94%E2%80%94Xcode-Server%E9%85%8D%E7%BD%AE/"/>
     <id>http://yoursite.com/2016/12/01/持续集成实施-十二-——Xcode-Server配置/</id>
     <published>2016-12-01T00:33:55.000Z</published>
-    <updated>2016-12-01T01:00:46.000Z</updated>
+    <updated>2016-12-01T01:04:08.000Z</updated>
     
-    <content type="html"><![CDATA[<p>持续集成测试工具在mac中有使用较为频繁的Xcode Server服务器，它号称集成了git版本管理和持续集成服务，而且还有文档管理的功能。如下图所示：<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server01.png" width="300" height="400" alt="Xcode Server工作架构" align="center"></p>
+    <content type="html"><![CDATA[<p>持续集成测试工具在mac中有使用较为频繁的Xcode Server服务器，它号称集成了git版本管理和持续集成服务，而且还有文档管理的功能。如下图所示：<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server01.png" alt="Xcode Server工作架构"></p>
 <h2 id="下面简单描述一下配置过程，当然很多细节还在具体摸索过程中，当前只是跑通了mac客户端和mac-Xcode-Server服务端。"><a href="#下面简单描述一下配置过程，当然很多细节还在具体摸索过程中，当前只是跑通了mac客户端和mac-Xcode-Server服务端。" class="headerlink" title="下面简单描述一下配置过程，当然很多细节还在具体摸索过程中，当前只是跑通了mac客户端和mac Xcode Server服务端。"></a>下面简单描述一下配置过程，当然很多细节还在具体摸索过程中，当前只是跑通了mac客户端和mac Xcode Server服务端。</h2><h3 id="一、配置Xcode-Server服务器"><a href="#一、配置Xcode-Server服务器" class="headerlink" title="一、配置Xcode Server服务器"></a>一、配置Xcode Server服务器</h3><p>1、apple给开发者可以凭开发者账号免费兑换os x server。免费兑换地址</p>
 <p><a href="https://developer.apple.com/osx/download/" target="_blank" rel="external">https://developer.apple.com/osx/download/</a></p>
 <p>2、下载os x server后点击安装。</p>
 <p>3、打开 Server 应用，以查看 OS X Server 中提供的服务列表。选择“Xcode”。</p>
 <p>点按“选取 Xcode”按钮，然后在“应用程序”文件夹中选择“Xcode”。Xcode 服务将自动启动。</p>
-<p><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server02.png" width="300" height="400" alt="Xcode Server启动服务" align="center"></p>
-<h3 id="二、配置Xcode客户端"><a href="#二、配置Xcode客户端" class="headerlink" title="二、配置Xcode客户端"></a>二、配置Xcode客户端</h3><p>1、打开客户端上的xcode然后，选择 XCode 的Preferences，然后选择“Accounts”，在底端点击加号按钮，选择“Add Server”。效果如图所示：<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server03.png" width="300" height="400" alt="Xcode客户端" align="center"></p>
+<p><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server02.png" alt="Xcode Server启动服务"></p>
+<h3 id="二、配置Xcode客户端"><a href="#二、配置Xcode客户端" class="headerlink" title="二、配置Xcode客户端"></a>二、配置Xcode客户端</h3><p>1、打开客户端上的xcode然后，选择 XCode 的Preferences，然后选择“Accounts”，在底端点击加号按钮，选择“Add Server”。效果如图所示:<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server03.png" alt="Xcode客户端"></p>
 <p>2、打开xcode&gt;product&gt;create bot</p>
-<p>3、填写bot名称，选择Xcode Server服务器<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server04.png" width="300" height="400" alt="Xcode Bot配置" align="center"></p>
+<p>3、填写bot名称，选择Xcode Server服务器<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server04.png" alt="Xcode Bot配置"></p>
 <p>4、Actions：选择执行的动作</p>
 <p>   a、对代码进行静态分析</p>
 <p>   b、对代码进行单元测试</p>
@@ -55,8 +55,7 @@
 <li><p>Xcode Server服务器描述文件保存在以下文件夹中 /Library/Developer/XcodeServer/ProvisioningProfiles，将Xcode客户端路径下的证书保存至Xcode Server服务器对应路径下</p>
 </li>
 </ul>
-<h3 id="四、开始构建"><a href="#四、开始构建" class="headerlink" title="四、开始构建"></a>四、开始构建</h3><p>可以选择在客户端mac xcode内进行构建，或者mac xcode server内构建，若在xcode server内构建，并可以看到结果如图所示：<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server05.png" width="300" height="400" alt="Xcode Server构建" align="center"></p>
-<p><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server06.png" width="300" height="400" alt="Xcode Server构建" align="center"></p>
+<h3 id="四、开始构建"><a href="#四、开始构建" class="headerlink" title="四、开始构建"></a>四、开始构建</h3><p>可以选择在客户端mac xcode内进行构建，或者mac xcode server内构建，若在xcode server内构建，并可以看到结果如图所示：<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server05.png" alt="Xcode Server构建"><br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server06.png" alt=""></p>
 <h3 id="后续继续探索，记录以便整理。。。"><a href="#后续继续探索，记录以便整理。。。" class="headerlink" title="后续继续探索，记录以便整理。。。"></a>后续继续探索，记录以便整理。。。</h3>]]></content>
     
     <summary type="html">
