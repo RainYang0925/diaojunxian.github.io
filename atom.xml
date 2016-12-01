@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2016-11-28T07:02:33.000Z</updated>
+  <updated>2016-12-01T01:00:46.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,59 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>持续集成实施(十二)——Xcode Server配置</title>
+    <link href="http://yoursite.com/2016/12/01/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E5%AE%9E%E6%96%BD-%E5%8D%81%E4%BA%8C-%E2%80%94%E2%80%94Xcode-Server%E9%85%8D%E7%BD%AE/"/>
+    <id>http://yoursite.com/2016/12/01/持续集成实施-十二-——Xcode-Server配置/</id>
+    <published>2016-12-01T00:33:55.000Z</published>
+    <updated>2016-12-01T01:00:46.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>持续集成测试工具在mac中有使用较为频繁的Xcode Server服务器，它号称集成了git版本管理和持续集成服务，而且还有文档管理的功能。如下图所示：<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server01.png" width="300" height="400" alt="Xcode Server工作架构" align="center"></p>
+<h2 id="下面简单描述一下配置过程，当然很多细节还在具体摸索过程中，当前只是跑通了mac客户端和mac-Xcode-Server服务端。"><a href="#下面简单描述一下配置过程，当然很多细节还在具体摸索过程中，当前只是跑通了mac客户端和mac-Xcode-Server服务端。" class="headerlink" title="下面简单描述一下配置过程，当然很多细节还在具体摸索过程中，当前只是跑通了mac客户端和mac Xcode Server服务端。"></a>下面简单描述一下配置过程，当然很多细节还在具体摸索过程中，当前只是跑通了mac客户端和mac Xcode Server服务端。</h2><h3 id="一、配置Xcode-Server服务器"><a href="#一、配置Xcode-Server服务器" class="headerlink" title="一、配置Xcode Server服务器"></a>一、配置Xcode Server服务器</h3><p>1、apple给开发者可以凭开发者账号免费兑换os x server。免费兑换地址</p>
+<p><a href="https://developer.apple.com/osx/download/" target="_blank" rel="external">https://developer.apple.com/osx/download/</a></p>
+<p>2、下载os x server后点击安装。</p>
+<p>3、打开 Server 应用，以查看 OS X Server 中提供的服务列表。选择“Xcode”。</p>
+<p>点按“选取 Xcode”按钮，然后在“应用程序”文件夹中选择“Xcode”。Xcode 服务将自动启动。</p>
+<p><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server02.png" width="300" height="400" alt="Xcode Server启动服务" align="center"></p>
+<h3 id="二、配置Xcode客户端"><a href="#二、配置Xcode客户端" class="headerlink" title="二、配置Xcode客户端"></a>二、配置Xcode客户端</h3><p>1、打开客户端上的xcode然后，选择 XCode 的Preferences，然后选择“Accounts”，在底端点击加号按钮，选择“Add Server”。效果如图所示：<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server03.png" width="300" height="400" alt="Xcode客户端" align="center"></p>
+<p>2、打开xcode&gt;product&gt;create bot</p>
+<p>3、填写bot名称，选择Xcode Server服务器<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server04.png" width="300" height="400" alt="Xcode Bot配置" align="center"></p>
+<p>4、Actions：选择执行的动作</p>
+<p>   a、对代码进行静态分析</p>
+<p>   b、对代码进行单元测试</p>
+<p>   c、生成archive包（可以选择是否生成用户安装包）</p>
+<p>5、cleaning：选择在何时清理项目，有几个选项（总是、每天、每周、从不）</p>
+<p>6、configuration：选择编译配置（Debug、release）</p>
+<p>7、选择在何时Xcode Server服务器开始持续集成，有几个选项（定时、在有新代码提交时、手动）</p>
+<p>8、Before Integration 在开始持续集成前执行的脚本</p>
+<p>9、 After Integration在持续集成后执行的脚本</p>
+<h3 id="三、Xcode-Server服务器证书配置"><a href="#三、Xcode-Server服务器证书配置" class="headerlink" title="三、Xcode Server服务器证书配置"></a>三、Xcode Server服务器证书配置</h3><p>需要注意的是iOS最变态的就是证书管理了，这里也同样如此需要注意证书的配置。<br>1、配置Certificates</p>
+<ul>
+<li><p>打开钥匙串，将iPhone Developer: xxx和iPhone Distribution:xxx导出为.p12文件</p>
+</li>
+<li><p>导入装OS X Server的MAC的钥匙串中，这次需导入到钥匙串系统中，而不是登录中，持续集成生成包时证书由/usr/bin/codesign管理，所以需将codesign添加为允许访问证书的程序，在显示简介中选择 访问控制 &gt;始终通过这些应用程序访问 中点击加号，开始选择/usr/bin/codesign程序。选择完成后点击确认。由于usr是隐藏文件，在选择时使用快捷键 CMD+SHIFT+. 显示隐藏文件</p>
+</li>
+</ul>
+<p>2、将Provisioning Profiles拷贝到Xcode Server</p>
+<ul>
+<li><p>Xcode客户端描述文件保存在以下文件夹中User/Library/MobileDevice/ProvisioningProfiles</p>
+</li>
+<li><p>Xcode Server服务器描述文件保存在以下文件夹中 /Library/Developer/XcodeServer/ProvisioningProfiles，将Xcode客户端路径下的证书保存至Xcode Server服务器对应路径下</p>
+</li>
+</ul>
+<h3 id="四、开始构建"><a href="#四、开始构建" class="headerlink" title="四、开始构建"></a>四、开始构建</h3><p>可以选择在客户端mac xcode内进行构建，或者mac xcode server内构建，若在xcode server内构建，并可以看到结果如图所示：<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server05.png" width="300" height="400" alt="Xcode Server构建" align="center"></p>
+<p><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server06.png" width="300" height="400" alt="Xcode Server构建" align="center"></p>
+<h3 id="后续继续探索，记录以便整理。。。"><a href="#后续继续探索，记录以便整理。。。" class="headerlink" title="后续继续探索，记录以便整理。。。"></a>后续继续探索，记录以便整理。。。</h3>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;持续集成测试工具在mac中有使用较为频繁的Xcode Server服务器，它号称集成了git版本管理和持续集成服务，而且还有文档管理的功能。如下图所示：&lt;br&gt;&lt;img src=&quot;https://raw.githubusercontent.com/diaojunxian/d
+    
+    </summary>
+    
+    
+  </entry>
   
   <entry>
     <title>持续集成实施(十一)——新需求</title>
@@ -596,35 +649,6 @@
     <summary type="html">
     
       &lt;h4 id=&quot;导语&quot;&gt;&lt;a href=&quot;#导语&quot; class=&quot;headerlink&quot; title=&quot;导语&quot;&gt;&lt;/a&gt;导语&lt;/h4&gt;&lt;p&gt;今天继续完成appium功能测试脚本向wda迁移过程中，遇到一个问题，无法获取switch的属性值，因为在此client端当前未有，所以今天
-    
-    </summary>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>iOS自动化实践——WebDriverAgent(五)</title>
-    <link href="http://yoursite.com/2016/08/02/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94WebDriverAgent-%E4%BA%94/"/>
-    <id>http://yoursite.com/2016/08/02/iOS自动化实践——WebDriverAgent-五/</id>
-    <published>2016-08-02T10:14:03.000Z</published>
-    <updated>2016-08-05T01:18:44.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>这两天开始真正开始根据用例写自动化测试脚本，但是遇到了一个问题，特别是当遇到inspector展示的页面控件元素为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">Class:</div><div class="line">Image</div><div class="line">Raw identifier:</div><div class="line">run_history_arrow</div><div class="line">Name:</div><div class="line">run_history_arrow</div><div class="line">Rect:</div><div class="line">&#123;&#123;206.5, 238.5&#125;, &#123;16, 16&#125;&#125;</div><div class="line">isEnabled:</div><div class="line">Yes</div><div class="line">isVisible:</div><div class="line">No</div></pre></td></tr></table></figure></p>
-<p>总是发现使用，自己封装的<code>find_name(text=name,className=classname)</code>找不到控件，为解决这个问题，我感觉自己走了个乌龙，但是我还是记述一下，当做对自己的警醒吧。</p>
-<h4 id="现象是：当控件元素为isVisible-NO时候，无法定位？"><a href="#现象是：当控件元素为isVisible-NO时候，无法定位？" class="headerlink" title="现象是：当控件元素为isVisible=NO时候，无法定位？"></a>现象是：当控件元素为isVisible=NO时候，无法定位？</h4><h4 id="思路一：使用类似于appium中的TouchAction实现。"><a href="#思路一：使用类似于appium中的TouchAction实现。" class="headerlink" title="思路一：使用类似于appium中的TouchAction实现。"></a>思路一：使用类似于appium中的TouchAction实现。</h4><p>1、因为在appium使用过程中，同样的控件，使用<br><code>driver.find_name(&#39;run_history_arrow&#39;).click()</code>是没有效果的，当时是使用类似于<br><code>TouchAction(driver).press(driver.find_name(&#39;run_history_arrow&#39;)).perform()</code><br>实现，因而第一思路是通过方法<code>touch action</code>实现。<br>可是<code>WDA</code>内又没有这样的api，该怎么办呢？<br>想到<code>macaca</code>封装的是<code>WDA</code>，去参考一下<code>macaca</code>是怎么实现的就可以了。<br>由于之前配置过<code>macaca</code>的环境，具体环境配置可见<a href="https://macacajs.github.io/macaca/" target="_blank" rel="external">macaca官方链接</a>。<br>调出<code>macaca</code>的执行用例：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">it(&apos;#1 test&apos;, function() &#123;</div><div class="line"> return driver</div><div class="line">   .sleep(1000)</div><div class="line">   .waitForElementByName(&apos;发现&apos;)</div><div class="line">   .click()</div><div class="line">   .sleep(1000)</div><div class="line">   .performTouchAction(wd.TouchAction.press(</div><div class="line">     driver.waitForElementByName(&apos;智玩&apos;)))</div><div class="line">   .sleep(5000);</div><div class="line"> &#125;);</div></pre></td></tr></table></figure></p>
-<p>发现怎么都执行不成功，也无法查看发起的请求是什么？后来联系了达峰，他告诉我，服务端暂时未实现<br><code>touch action</code>的功能，只能通过在<code>macaca</code>内的代码里大致看到请求格式为:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Post /session/sessionid/touch/perform</div></pre></td></tr></table></figure></p>
-<p>2、既然<code>macaca</code>走不通，就去查看appium的源码，因为<code>appium</code>也封装了<code>touch action</code>，我知道<br><code>appium</code>是完全可执行成功的。<br>在<code>appium</code>内<code>_request</code>打断点，<code>print request</code>等等，终于可以捞出了完全的请求格式：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">curl -X POST -H &quot;Content-Type: application/json&quot; -d &quot;&#123;&quot;actions&quot;: [&#123;&quot;action&quot;:</div><div class="line"> &quot;press&quot;, &quot;elementId&quot;: &quot;4B72992B-0B42-4A14-9127-06F217CAA5DB&quot;&#125;]&#125;&quot; </div><div class="line"> http://192.168.1.101:8100/session/C8C847CF-AD3D-4F5F-B51B-EA67788875DE/touch/</div><div class="line"> perform</div></pre></td></tr></table></figure></p>
-<p>可是奇怪的是，仍然没有起到任何效果，而且获取的返回值<code>status=1</code>显然是一个错误的请求。</p>
-<h4 id="思路二：观察inspector展示的isVisible-NO，思考是否跟此有关？"><a href="#思路二：观察inspector展示的isVisible-NO，思考是否跟此有关？" class="headerlink" title="思路二：观察inspector展示的isVisible=NO，思考是否跟此有关？"></a>思路二：观察inspector展示的<code>isVisible=NO</code>，思考是否跟此有关？</h4><p>1、看到<code>isVisible=NO</code>的都无法定位，但是只要是<code>isVisible=YES</code>的却都可以点击触发。<br>所以尝试通过<code>xcode</code>更改<code>isVisible=NO</code>的属性，查看了大量的链接和咨询了开发，无法给出定论说如何更改此属性，我显示有点儿灰心。。。。<br>2、尝试通过自己发起请求来定位此控件，发现竟然有返回值：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">  &quot;value&quot; : [</div><div class="line">    &#123;</div><div class="line">      &quot;ELEMENT&quot; : &quot;0BCEDAB9-66DE-413B-B78D-4AF15C67476A&quot;,</div><div class="line">      &quot;type&quot; : &quot;XCUIElementTypeImage&quot;,</div><div class="line">      &quot;label&quot; : null</div><div class="line">    &#125;</div><div class="line">  ],</div><div class="line">  &quot;sessionId&quot; : &quot;8BFE332C-4954-4F5C-BAAA-330DCD49E61E&quot;,</div><div class="line">  &quot;status&quot; : 0</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
-<p>这个时候才注意到，label值为空，突然联想到之前封装的<code>client</code>端有一句代码是:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">if self._text and elem.get(&apos;label&apos;) != self._text:        </div><div class="line">     continue</div></pre></td></tr></table></figure></p>
-<p>我立马恍然，原来是自己走了弯路，封装错了。</p>
-<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>其实很简单，只是注销这一句<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">if self._text and elem.get(&apos;label&apos;) != self._text:        </div><div class="line">     continue</div></pre></td></tr></table></figure></p>
-<p>程序可以执行成功。<br>好吧，我浪费了将近两天的时间，功能自动化测试继续。。。。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;这两天开始真正开始根据用例写自动化测试脚本，但是遇到了一个问题，特别是当遇到inspector展示的页面控件元素为：&lt;br&gt;&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div cla
     
     </summary>
     
