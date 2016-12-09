@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2016-12-01T01:05:24.000Z</updated>
+  <updated>2016-12-09T06:43:53.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,65 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>持续集成实施(十三)——Infer</title>
+    <link href="http://yoursite.com/2016/12/09/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E5%AE%9E%E6%96%BD-%E5%8D%81%E4%B8%89-%E2%80%94%E2%80%94Infer/"/>
+    <id>http://yoursite.com/2016/12/09/持续集成实施-十三-——Infer/</id>
+    <published>2016-12-09T06:18:52.000Z</published>
+    <updated>2016-12-09T06:43:53.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>Infer是一个静态代码分析工具，facebook出品，可以分析OC，Java和C代码，报告潜在的问题。<br>Infer在github上地址：<a href="https://github.com/facebook/infer。" target="_blank" rel="external">https://github.com/facebook/infer。</a><br>当前我配置了MAC环境并检查iOS提交的代码，看效果如何。</p>
+<hr>
+<h3 id="一、安装"><a href="#一、安装" class="headerlink" title="一、安装"></a>一、安装</h3><p>Infer为Linux和MacOS系统提供了预构建的二进制文件,如果你只是想使用Infer,而不想为该项目贡献代码的话,这些二进制文件足够了.相反，如果你想编译infer,请选择源码安装。此文档以Mac系统，源文件安装为栗子。</p>
+<p>环境要求</p>
+<p>Python版本：大于等于2.7</p>
+<p>第一种：二进制文件安装</p>
+<p>从infer release页面获取最新版本infer-osx-vXX.tar.xz (以osx标识),然后执行下面命令来安装Infer.</p>
+<p>第二种：源码安装</p>
+<p>借助brew安装</p>
+<p>1.1安装brew<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/usr/bin/ruby -e “$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)”</div></pre></td></tr></table></figure></p>
+<p>1.2安装infer<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">brew install infer</div></pre></td></tr></table></figure></p>
+<p>安装达到100% 后可通过｀infer –version｀查看infer版本信息。</p>
+<h3 id="二、Infer-运行的两个阶段"><a href="#二、Infer-运行的两个阶段" class="headerlink" title="二、Infer 运行的两个阶段"></a>二、Infer 运行的两个阶段</h3><p>不管是分析哪种语言，Infer 运行时，分为两个主要阶段：</p>
+<ol>
+<li><p>捕获阶段<br>Infer 捕获编译命令，将文件翻译成 Infer 内部的中间语言。<br>这种翻译和编译类似，Infer 从编译过程获取信息，并进行翻译。这就是我们调用 Infer 时带上一个编译命令的原因了，比如: infer – clang -c file.c, infer – javac File.java。结果就是文件照常编译，同时被 Infer 翻译成中间语言，留作第二阶段处理。特别注意的就是，如果没有文件被编译，那么也没有任何文件会被分析。<br>Infer 把中间文件存储在结果文件夹中，一般来说，这个文件夹会在运行 infer 的目录下创建，命名是 infer-out/。当然，你也可以通过 -o 选项来自定义文件夹名字：<br>infer -o /tmp/out – javac Test.java</p>
+</li>
+<li><p>分析阶段<br>在分析阶段，Infer 分析 infer-out/ 下的所有文件。分析时，会单独分析每个方法和函数。<br>在分析一个函数的时候，如果发现错误，将会停止分析，但这不影响其他函数的继续分析。<br>所以你在检查问题的时候，修复输出的错误之后，需要继续运行 Infer 进行检查，知道确认所有问题都已经修复。<br>错误除了会显示在标准输出之外，还会输出到文件 infer-out/bug.txt 中，我们过滤这些问题，仅显示最有可能存在的。<br>在结果文件夹中（infer-out），同时还有一个 csv 文件 report.csv，这里包含了所有 Infer 产生的信息，包括：错误，警告和信息。</p>
+</li>
+</ol>
+<p><strong>增量模式和非增量模式</strong><br>运行时，Infer 默认会删除之前产生的 infer-out/ 文件夹，这会导致非增量模式。</p>
+<p>如果需要增量模式，加入 –incremental（或者 -i）参数运行，这样 infer-out/ 文件夹将不会被删除。</p>
+<p>也有例外的情况，尤其是你只能在上面的一个阶段使用这个参数。</p>
+<p>比如， infer – javac Hello.java 相当于运行了以下两个命令。</p>
+<p>infer -a capture – javac Hello.java<br>infer – analyze</p>
+<p>注意，第二个命令不会删除 infer-out/，因为分析阶段，需要使用文件夹中的进行分析。</p>
+<p>你可以通过 infer –help 了解更多关于 Infer 的各种操作模式。</p>
+<p>下面我们简单明了地强调一下，什么情况下需要使用增量模式，什么时候使用非增量模式。</p>
+<p>2.1非增量模式</p>
+<p>非增量模式适用于单编译命令，重复运行 Infer 检测的情况。</p>
+<p>infer – javac Hello.java<br>edit Hello.java</p>
+<h1 id="编译-Hello-java，改动了代码，比如修复了一些问题"><a href="#编译-Hello-java，改动了代码，比如修复了一些问题" class="headerlink" title="编译 Hello.java，改动了代码，比如修复了一些问题"></a>编译 Hello.java，改动了代码，比如修复了一些问题</h1><p>infer – javac Hello.java</p>
+<p>如果需要进行全新的一轮的分析，必须：<br>    删除结果文件夹：<br>    rm -fr infer-out<br>    删除构建产物。比如，对于基于 make 的项目，运行 make clean。</p>
+<p>2.2增量模式</p>
+<p>如果想使用 Infer 进行增量分析，你的编译系统需要是这其中的一个。<br>运行 Infer 进行检测的时候，只需要简单运行 infer – &lt;编译命令&gt;，其中编译命令就是我们平时编译的命令。需要注意的是，运行前的项目是清理过的，这样 Infer 才能在捕获阶段捕获所有的编译命令。<br>比如，一个 gradle 项目：</p>
+<p>gradle clean<br>infer – gradle build</p>
+<p>接下来，如果你修改了项目中的一些文件，你可以重复上面的命令，清理并重新分析整个项目。或者通过参数，让 Infer 使用使用增量模式。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">edit some/File.java</div><div class="line"># 修改了 some/File.java 的一些内容。</div><div class="line">infer --incremental -- gradle build</div></pre></td></tr></table></figure></p>
+<p>当然，你也可以在第一次运行 Infer 进行检测的时候，就使用 –incremental。</p>
+<h3 id="三、本项目配置使用"><a href="#三、本项目配置使用" class="headerlink" title="三、本项目配置使用"></a>三、本项目配置使用</h3><p>文前就声明本文只是配置MAC环境，故而使用命令<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">infer --pod-xml -- xcodebuild -workspace MiFit.xcworkspace -scheme MiFit -configuration Release -sdk iphonesimulator clean build</div></pre></td></tr></table></figure></p>
+<h3 id="配置过程中出现问题"><a href="#配置过程中出现问题" class="headerlink" title="配置过程中出现问题"></a>配置过程中出现问题</h3><p>1、一直提示<code>ERROR: &quot;etree&quot; Python package not found.</code><br>解决：<code>sudo pip install lxml</code></p>
+<hr>
+<p>当前先使用iOS做测试。。。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;Infer是一个静态代码分析工具，facebook出品，可以分析OC，Java和C代码，报告潜在的问题。&lt;br&gt;Infer在github上地址：&lt;a href=&quot;https://github.com/facebook/infer。&quot; target=&quot;_blank&quot; rel=
+    
+    </summary>
+    
+    
+  </entry>
   
   <entry>
     <title>持续集成实施(十二)——Xcode Server配置</title>
@@ -227,14 +286,14 @@
     <link href="http://yoursite.com/2016/10/18/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E5%AE%9E%E6%96%BD-%E5%85%AD/"/>
     <id>http://yoursite.com/2016/10/18/持续集成实施-六/</id>
     <published>2016-10-18T07:22:26.000Z</published>
-    <updated>2016-10-21T03:48:42.000Z</updated>
+    <updated>2016-12-07T00:41:46.000Z</updated>
     
     <content type="html"><![CDATA[<p>今天遇到了一个非常变态的问题，所有涉及到操作缓存文件的都有提示<code>operation not permitted</code>。找了很多的解决方案，简单记述一下折腾的过程。</p>
 <hr>
 <h3 id="怀疑与bundler有关？"><a href="#怀疑与bundler有关？" class="headerlink" title="怀疑与bundler有关？"></a>怀疑与bundler有关？</h3><p>主要原因是之前出过很多次环境问题，都跟bundler有关，而且它是安装ruby包的必须插件，但是排查许久，也不能确定修改哪里可以解决，直到看到了一篇文章，说是因为需要修改<code>.bundle/config</code>，但是找不到这个目录作罢。</p>
 <h3 id="确定是El-Capitan-加入了Rootless机制，设置-root-权限也不行。"><a href="#确定是El-Capitan-加入了Rootless机制，设置-root-权限也不行。" class="headerlink" title="确定是El Capitan 加入了Rootless机制，设置 root 权限也不行。"></a>确定是El Capitan 加入了Rootless机制，设置 root 权限也不行。</h3><p>于是尝试关闭 Rootless。重启按住 Command+R，进入恢复模式，打开Terminal。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">csrutil disable</div></pre></td></tr></table></figure></p>
 <p>重启即可。如果要恢复默认，那么<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">csrutil enable</div></pre></td></tr></table></figure></p>
-<h3 id="遇到新问题SSL-connect-returned-1-errno-0-state-SSLv3-read-server-certificate-B-certificate-verify-failed"><a href="#遇到新问题SSL-connect-returned-1-errno-0-state-SSLv3-read-server-certificate-B-certificate-verify-failed" class="headerlink" title="遇到新问题SSL_connect returned=1 errno=0 state=SSLv3 read server certificate B: certificate verify failed"></a>遇到新问题<code>SSL_connect returned=1 errno=0 state=SSLv3 read server certificate B: certificate verify failed</code></h3><p>解决：简单讲升级ruby即可<br>1、安装rvm<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">curl -L https://get.rvm.io | bash -s stable</div><div class="line">source ~/.rvm/scripts/rvm</div></pre></td></tr></table></figure></p>
+<h3 id="遇到新问题SSL-connect-returned-1-errno-0-state-SSLv3-read-server-certificate-B-certificate-verify-failed"><a href="#遇到新问题SSL-connect-returned-1-errno-0-state-SSLv3-read-server-certificate-B-certificate-verify-failed" class="headerlink" title="遇到新问题SSL_connect returned=1 errno=0 state=SSLv3 read server certificate B: certificate verify failed"></a>遇到新问题<code>SSL_connect returned=1 errno=0 state=SSLv3 read server certificate B: certificate verify failed</code></h3><p>解决：简单讲升级ruby即可<br>1、安装rvm<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">echo &quot;ruby_url=https://cache.ruby-china.org/pub/ruby&quot; &gt; ~/.rvm/user/db</div><div class="line">curl -L https://get.rvm.io | bash -s stable</div><div class="line">source ~/.rvm/scripts/rvm</div></pre></td></tr></table></figure></p>
 <p>2、安装ruby<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">rvm install 2.3.1 --disable-binary</div></pre></td></tr></table></figure></p>
 <p>3、安装bundler升级gem<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">gem install bundler -v 1.13.4</div><div class="line">sudo gem update --system</div></pre></td></tr></table></figure></p>
 <p>4、安装fastlane<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo gem install fastlane</div></pre></td></tr></table></figure></p>
@@ -623,33 +682,6 @@
     
       &lt;h3 id=&quot;导语&quot;&gt;&lt;a href=&quot;#导语&quot; class=&quot;headerlink&quot; title=&quot;导语&quot;&gt;&lt;/a&gt;导语&lt;/h3&gt;&lt;hr&gt;
 &lt;p&gt;一直用的是Appium，最近在研究WebDriverAgent，对二者之间的区别和联系有了更深的认知，&lt;br&gt;&lt;code&gt;Appi
-    
-    </summary>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>iOS自动化实践——WebDriverAgent(六)</title>
-    <link href="http://yoursite.com/2016/08/03/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94WebDriverAgent-%E5%85%AD/"/>
-    <id>http://yoursite.com/2016/08/03/iOS自动化实践——WebDriverAgent-六/</id>
-    <published>2016-08-03T08:00:11.000Z</published>
-    <updated>2016-08-08T10:38:32.000Z</updated>
-    
-    <content type="html"><![CDATA[<h4 id="导语"><a href="#导语" class="headerlink" title="导语"></a>导语</h4><p>今天继续完成appium功能测试脚本向wda迁移过程中，遇到一个问题，无法获取switch的属性值，因为在此client端当前未有，所以今天的任务是写一个类似appium的方法————get_attribute()。</p>
-<hr>
-<h4 id="一、查看源码"><a href="#一、查看源码" class="headerlink" title="一、查看源码"></a>一、查看源码</h4><p>在<code>FBElementCommands.m</code>内有一个获取控件元素属性值的请求，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[[FBRoute GET:@&quot;/element/:uuid/attribute/:name&quot;] respondWithTarget:self</div><div class="line">action:@selector(handleGetAttribute:)],</div></pre></td></tr></table></figure></p>
-<p>查看方法:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line">+ (id&lt;FBResponsePayload&gt;)handleGetAttribute:(FBRouteRequest *)request</div><div class="line">&#123;</div><div class="line">  FBElementCache *elementCache = request.session.elementCache;</div><div class="line">  XCUIElement *element = [elementCache</div><div class="line">  elementForUUID:request.parameters[@&quot;uuid&quot;]];</div><div class="line">  id attributeValue = [element </div><div class="line">  fb_valueForWDAttributeName:request.parameters[@&quot;name&quot;]];</div><div class="line">  attributeValue = attributeValue ?: [NSNull null];</div><div class="line">  return FBResponseWithStatus(FBCommandStatusNoError, attributeValue);</div><div class="line">&#125;</div><div class="line"></div><div class="line">+ (id&lt;FBResponsePayload&gt;)handleGetText:(FBRouteRequest *)request</div><div class="line">&#123;</div><div class="line">  FBElementCache *elementCache = request.session.elementCache;</div><div class="line">  XCUIElement *element = [elementCache </div><div class="line">  elementForUUID:request.parameters[@&quot;uuid&quot;]];</div><div class="line">  id text;</div><div class="line">  if ([element elementType] == XCUIElementTypeStaticText || [element </div><div class="line">    elementType] == XCUIElementTypeButton) &#123;</div><div class="line">    text = [element wdLabel];</div><div class="line">  &#125; else &#123;</div><div class="line">    text = [element wdValue];</div><div class="line">  &#125;</div><div class="line">  text = text ?: [NSNull null];</div><div class="line">  return FBResponseWithStatus(FBCommandStatusNoError, text);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
-<p>看的不是很明白，但是确认的是<code>GET</code>请求，<code>uuid</code>为<code>elementid</code>，这里的<code>:name</code>是什么呢？</p>
-<h4 id="二、借鉴appium"><a href="#二、借鉴appium" class="headerlink" title="二、借鉴appium"></a>二、借鉴appium</h4><p>appium也是通过请求进行通信，同样有获取<code>get_attribute()</code>的方法，写个方法，打印出请求地址：<br><code>/element/elementid/attribute/value</code>，此时，已经很简单了，直接命令行发起请求：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">curl -X GET -H &quot;Content-Type: application/json&quot; http://192.168.1.101:8100/</div><div class="line">session/C8C847CF-AD3D-4F5F-B51B-EA67788875DE/element/</div><div class="line">A8C847CF-AD3D-4F5F-B51B-EA677DD885DE/attribute/value</div></pre></td></tr></table></figure></p>
-<p>有正确的返回值：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">    value:True,</div><div class="line">    sessionid:C8C847CF-AD3D-4F5F-B51B-EA67788875DE,</div><div class="line">    status:0</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
-<h4 id="三、构造方法实现"><a href="#三、构造方法实现" class="headerlink" title="三、构造方法实现"></a>三、构造方法实现</h4><p>现在实现已经很简单了:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">def _property(self, name, data=&apos;&apos;, method=&apos;GET&apos;, timeout=None, eid=None):</div><div class="line">    eid = eid or self.wait(timeout)[&apos;ELEMENT&apos;]</div><div class="line">    return self._request(data, suburl=&apos;element/%s/%s&apos; % (eid, name),</div><div class="line">    method=method)[&apos;value&apos;]</div><div class="line">def attribute(self, name):</div><div class="line">    return self._property(&apos;attribute/%s&apos; % name)</div></pre></td></tr></table></figure></p>
-<p>目前为止，appium功能测试脚本向wda迁移还是比较顺利的。。。。。。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;h4 id=&quot;导语&quot;&gt;&lt;a href=&quot;#导语&quot; class=&quot;headerlink&quot; title=&quot;导语&quot;&gt;&lt;/a&gt;导语&lt;/h4&gt;&lt;p&gt;今天继续完成appium功能测试脚本向wda迁移过程中，遇到一个问题，无法获取switch的属性值，因为在此client端当前未有，所以今天
     
     </summary>
     
