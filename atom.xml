@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2016-12-09T06:43:53.000Z</updated>
+  <updated>2016-12-12T08:30:26.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,30 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>持续集成实施(十四)——Xcode Server配置(二)</title>
+    <link href="http://yoursite.com/2016/12/12/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E5%AE%9E%E6%96%BD-%E5%8D%81%E5%9B%9B-%E2%80%94%E2%80%94Xcode-Server%E9%85%8D%E7%BD%AE-%E4%BA%8C/"/>
+    <id>http://yoursite.com/2016/12/12/持续集成实施-十四-——Xcode-Server配置-二/</id>
+    <published>2016-12-12T08:17:23.000Z</published>
+    <updated>2016-12-12T08:30:26.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>前文介绍过Xcode Server配置，本文介绍Xcode Server和Jenkins Gerrit trigger集成。</p>
+<h3 id="1、Jenkins-Gerrit-trigger配置"><a href="#1、Jenkins-Gerrit-trigger配置" class="headerlink" title="1、Jenkins Gerrit trigger配置"></a>1、Jenkins Gerrit trigger配置</h3><p>这里是在jenkins内配置Gerrit trigger，注意主要是为了Trigger job然后向xcode server 发起请求，让Xcode server开始构建，因而需要取消Jenkins trigger内的Verify+1和Verify-1操作。<br>触发Xcode server借助Xcode server官方Api。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">export</div><div class="line">bot_id=&quot;8941fe179c67939ab009907baa64e3cf&quot;</div><div class="line">curl -k -X POST https://10.8.2.53:20343/api/bots/$&#123;bot_id&#125;/integrations</div></pre></td></tr></table></figure></p>
+<h3 id="2、Xcode-Server内设置"><a href="#2、Xcode-Server内设置" class="headerlink" title="2、Xcode Server内设置"></a>2、Xcode Server内设置</h3><p>在Trigger内触发Xcode Server job之后，然后在bots内新建Pre-Integration Scripts and Post-Integration Scripts，是为了更新gerrit 当前commits，并且依据运行结果，进行Verify+1和Verify-1。<br>Pre-Integration Scripts<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">#!/bin/bash</div><div class="line">project_path=$(pwd)</div><div class="line">cd $&#123;project_path&#125;</div><div class="line"></div><div class="line">ssh -p 29418 xxx@xxx &apos;gerrit query label:Verified=0 project:&quot;xxx&quot;  status: open limit:1 --current-patch-set&apos; &gt;~/Desktop/junk.txt</div><div class="line">export commit=`grep revision: ~/Desktop/junk.txt | grep -oE &apos;[^ ]+$&apos;`</div><div class="line">export ref=`grep ref: ~/Desktop/junk.txt | grep -oE &apos;[^ ]+$&apos;`</div><div class="line">git fetch &quot;ssh://xx@xxx:29418/xxx&quot; $ref &amp;&amp; git checkout FETCH_HEAD</div><div class="line">git checkout -b $commit</div><div class="line"></div><div class="line">ssh -p 29418 xx@xx  &apos;gerrit review -p &quot;xx&quot; -m &quot;Xcode Server Starting Test&quot; &apos;$commit</div></pre></td></tr></table></figure></p>
+<p>Post-Integration Scripts<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">project_path=$(pwd)</div><div class="line">cd $&#123;project_path&#125;</div><div class="line"></div><div class="line">export commit=`grep revision: ~/Desktop/junk.txt | grep -oE &apos;[^ ]+$&apos;`</div><div class="line">ssh -p 29418 xx@xx &apos;gerrit review -p &quot;testing/dummy&quot; -m &quot;Test from the script&quot; --verified +1 &apos;$commit</div></pre></td></tr></table></figure></p>
+<p>这就实现了Jenkins触发，然后Xcode server构建，结果反馈gerrit。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;前文介绍过Xcode Server配置，本文介绍Xcode Server和Jenkins Gerrit trigger集成。&lt;/p&gt;
+&lt;h3 id=&quot;1、Jenkins-Gerrit-trigger配置&quot;&gt;&lt;a href=&quot;#1、Jenkins-Gerrit-trigger
+    
+    </summary>
+    
+    
+  </entry>
   
   <entry>
     <title>持续集成实施(十三)——Infer</title>
@@ -647,41 +671,6 @@
     <summary type="html">
     
       &lt;p&gt;上接&lt;a href=&quot;https://diaojunxian.github.io/2016/07/11/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94j
-    
-    </summary>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>Appium and WebDriverAgent</title>
-    <link href="http://yoursite.com/2016/08/04/Appium-and-WebDriverAgent/"/>
-    <id>http://yoursite.com/2016/08/04/Appium-and-WebDriverAgent/</id>
-    <published>2016-08-04T05:37:27.000Z</published>
-    <updated>2016-08-09T00:46:27.000Z</updated>
-    
-    <content type="html"><![CDATA[<h3 id="导语"><a href="#导语" class="headerlink" title="导语"></a>导语</h3><hr>
-<p>一直用的是Appium，最近在研究WebDriverAgent，对二者之间的区别和联系有了更深的认知，<br><code>Appium</code>可跨平台，同时支持安卓和iOS平台，但是WebDriverAgent目前只支持iOS平台，在使用<br><code>Appium</code>过程中发现<code>Appium</code>在定位控件总是会出现不稳定现象，相对而言<code>WebDriverAgent</code>稳定迅捷太多。首先对二者实现原理做简要全面的介绍。</p>
-<hr>
-<h3 id="Appium实现原理"><a href="#Appium实现原理" class="headerlink" title="Appium实现原理"></a>Appium实现原理</h3><p>Appiums是由Nodejs编写的，集成了现有优秀框架，以Selenium WebDriver的协议统一起来，<br>遵循RESTful设计风格web 服务器，它接受客户端的连接，接收客户端的命令，在手机设备上执行命令，然后通过HTTP的响应收集命令执行的结果。<br>这种架构给我们提供了很好的开放特性：只要某种语言有http 客户端的api，我们就可以通过这个语言写我们的测试代码，当然了我们为了方便大家使用，提供了多种语言的客户端库供使用，我们在项目组选择的就是基于<code>Python</code>的<code>client</code>端。</p>
-<h4 id="一、安卓平台实现原理"><a href="#一、安卓平台实现原理" class="headerlink" title="一、安卓平台实现原理"></a>一、安卓平台实现原理</h4><p>1、架构图<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/android.png" width="300" height="400" alt="Android实现架构" align="center"><br>2、实现原理<br>(1)最上面的Client端可以是多种语言编写，它类似于selenium webdriver，封装了selenium的Api，并添加了部分的新的Api，我们可以依据这些Api编辑自动化脚本。<br>(2)Json Wire Protocol是一种协议，遵循REST风格，以JSON方法进行传输，是一系列的键值对，<br>遵循<a href="https://w3c.github.io/webdriver/webdriver-spec.html" target="_blank" rel="external">W3C WebDriver Spec设计风格</a>。<br>(3)中间是起的Appium的服务，Appium在这边起了一个Server（4723端口），在这里提供了一套web服务，Appium Server接收web driver标准请求，解析请求内容，调⽤用对应的uiautomator响应操作<br>(4)<code>Appium server</code>可以把请求接收并转义转发给中间件Bootstrap.jar，<br>它是用java写的，安装在手机上。Bootstrap 接收appium 的命令(4724端口)，最终通过调⽤用UiAutomator的命令来实现对手机的操作。<br>(5)Bootstrap可以理解为它是一个uiautomator的测试脚本，它的入口类Bootstrap继承于UiAutomatorTestCase，所以UiAututomator可以正常运行它，它也可以正常的使用uiautomator的方法，这个就是appium的命令可以转换成uiautomator的命令的关键；其次，它是一个socket服务器，它专门监听4724端口过来的appium的连接和命令数据，并把appium的命令转换成uiautomator的命令来让uiautomator进行处理；最后，它处理的是appium从pc端过来的命令，是一系列的请求。<br>(6)最后执⾏行的结果以Json Wire Protocol，由Bootstrap返回给appium server，再返回给Client端，Client会汇总操作结果。</p>
-<h4 id="二、iOS平台实现原理"><a href="#二、iOS平台实现原理" class="headerlink" title="二、iOS平台实现原理"></a>二、iOS平台实现原理</h4><p>1、架构图<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/iphone.png" width="300" height="400" alt="iOS实现架构" align="center"><br>2、实现原理<br>在iOS端，appium同样使⽤用WebDriver的⼀一套协议。与Android端测试框架不同的是，<br>appium ios封装了apple的 Instruments框架，主要用了Instrument里的UI Automation（Apple<br>的⾃自动化测试框架），然后在设备中注⼊入bootstrap.js进⾏行监听。<br>3、Appium iOS比较慢的原因：<br>(1)python client &lt;====&gt; Http Server<br>(2)Http Server &lt;====&gt; Appium Server<br>(3)Appium Server &lt;====&gt; bootstrap 耗时长<br>(4)bootstrap &lt;====&gt; UIAutomation 耗时长<br>中间层较多，各种通信传输是非常耗时。</p>
-<h3 id="WebDriverAgent实现原理"><a href="#WebDriverAgent实现原理" class="headerlink" title="WebDriverAgent实现原理"></a>WebDriverAgent实现原理</h3><p>现在我想重点介绍的是WebDriverAgent，首先强调它跟UIAutomation没有关系，它封装的是XCTest框架，WebDriverAgent连接XCTest.framework调用苹果的Api直接在设备上执行命令。<br>1、原理图<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/wda.png" width="300" height="400" alt="WebDriverAgent实现架构" align="center"><br>2、实现原理<br>(1)WebDriverAgent封装的是XCTest，而XCTest框架是苹果在xcode5提出的，在Xcode7中已经支持UI功能测试，facebook于2015年提出了WebDriverAgent，可支持真机和模拟器。<br>(2)WebDriverAgent Api支持<a href="https://w3c.github.io/webdriver/webdriver-spec.html" target="_blank" rel="external">W3C WebDriver Spec设计风格</a>。通过命令行或者xcode启动testRunner以后，会在手机端安装一个WebDriverAgentRunner，类似于appium中的bootstrap，可以接收client端发送的http请求，然后将请求转义为XCTest的命令，在手机端进行操作，并且操作结果再以Json的形式反馈给client端进行汇总。<br>(3)这里的Accessibility 是 Apple 很早之前构建的一个框架，它能帮助一些行动不便的用户来更好地使用应用。XCTest利用Accessibility进行UI控件的识别和定位。</p>
-<h3 id="对比"><a href="#对比" class="headerlink" title="对比"></a>对比</h3><p>WebDriverAgent相对于Appium有着很大优势：</p>
-<ul>
-<li>支持一台 mac 连接多台设备进行测试（走 xcodebuild ，不走 instruments）</li>
-<li>任意应用的 UI 测试，是任意</li>
-<li>支持跨应用（任意界面都能控制)</li>
-<li>控件定位方便，直接通过<code>ip:port/inspector</code>查看，无需启动Appium GUI查看</li>
-<li>亲测比Appium执行速度快</li>
-<li>最重要的是苹果官方将UIAutomation标识为废弃，XCTest是未来的趋势，必然会发挥更大的作用</li>
-</ul>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;h3 id=&quot;导语&quot;&gt;&lt;a href=&quot;#导语&quot; class=&quot;headerlink&quot; title=&quot;导语&quot;&gt;&lt;/a&gt;导语&lt;/h3&gt;&lt;hr&gt;
-&lt;p&gt;一直用的是Appium，最近在研究WebDriverAgent，对二者之间的区别和联系有了更深的认知，&lt;br&gt;&lt;code&gt;Appi
     
     </summary>
     
