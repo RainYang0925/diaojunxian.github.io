@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2016-12-12T08:30:26.000Z</updated>
+  <updated>2016-12-22T09:24:54.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,47 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>持续集成实施(十五)——BlueOcean</title>
+    <link href="http://yoursite.com/2016/12/22/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E5%AE%9E%E6%96%BD-%E5%8D%81%E4%BA%94-%E2%80%94%E2%80%94BlueOcean/"/>
+    <id>http://yoursite.com/2016/12/22/持续集成实施-十五-——BlueOcean/</id>
+    <published>2016-12-22T01:30:27.000Z</published>
+    <updated>2016-12-22T09:24:54.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>由于电脑系统更换过，本地安装的jenkins已经没有了，为了验证BlueOcean，决定重新安装jenkins。<br>之前一直用<code>brew install jenkins</code>，这次决定手动安装，通过war包和tomcat启动。</p>
+<h4 id="一、配置Tomcat"><a href="#一、配置Tomcat" class="headerlink" title="一、配置Tomcat"></a>一、配置Tomcat</h4><p>1、下载很简单<br>登录Tomcat官网，地址是<a href="http://tomcat.apache.org，点击Download选择需要下载的版本下载，需要注意的是我的mac版本，故选择下载Core下面的zip。" target="_blank" rel="external">http://tomcat.apache.org，点击Download选择需要下载的版本下载，需要注意的是我的mac版本，故选择下载Core下面的zip。</a><br>2、解压和启动<br>我就解压在本地的Documents里面，然后重命名为jenkins。这时候<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">cd jenkins/bin</div><div class="line">sh ./starup.sh</div></pre></td></tr></table></figure></p>
+<p>验证tomcat是否启动成功，一般情况下，会报错提示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">Cannot find ./catalina.sh</div><div class="line">The file is absent or does not have execute permission</div><div class="line">This file is needed to run this program</div></pre></td></tr></table></figure></p>
+<p>是因为权限不够，赋予权限即可。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo chmod 755 bin/*.sh</div></pre></td></tr></table></figure></p>
+<p>这个时候，启动正常应该提示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">Using CATALINA_BASE:   /Users/djx/Documents/JENKINS</div><div class="line">Using CATALINA_HOME:   /Users/djx/Documents/JENKINS</div><div class="line">Using CATALINA_TMPDIR: /Users/djx/Documents/JENKINS/temp</div><div class="line">Using JRE_HOME:        /Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home</div><div class="line">Using CLASSPATH:       /Users/djx/Documents/JENKINS/bin/bootstrap.jar:/Users/djx/Documents/JENKINS/bin/tomcat-juli.jar</div></pre></td></tr></table></figure></p>
+<p>打开浏览器输入<code>http:127.0.0.1:8080</code>应该有tomcat的提示。</p>
+<p>关闭tomcat也很简单:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sh ./shutdown.sh</div></pre></td></tr></table></figure></p>
+<h4 id="二、下载jenkins-war并配置tomcat"><a href="#二、下载jenkins-war并配置tomcat" class="headerlink" title="二、下载jenkins.war并配置tomcat"></a>二、下载jenkins.war并配置tomcat</h4><p>1、下载jenkins<br>下载安装jenkins，去官网下载<code>https://jenkins.io/</code><br>这里直接下载war包, 不要下载Mac OS X,下载完成的到jenkins.war文件<br>2、安装，启动jenkins<br>将jenkins.war文件复制到jenkins/webapps,然后删除ROOT文件, 重命名jenkins.war -&gt; ROOT.war</p>
+<p>3、bin 目录下新建 setenv.sh 文件，内容如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">export JENKINS_HOME=/Users/djx/Documents/jenkins_workspace</div></pre></td></tr></table></figure></p>
+<p>这里路径随意，是存放job等一些信息的。</p>
+<p>4、启动，依然是用<code>sh ./starup.sh</code><br>5、然后就可以在浏览器输入<code>http:127.0.0.1:8080</code>，进入jenkins。</p>
+<p>6、查看日志输出<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tail -f ../logs/catalina.out</div></pre></td></tr></table></figure></p>
+<h4 id="三、BlueOcean"><a href="#三、BlueOcean" class="headerlink" title="三、BlueOcean"></a>三、BlueOcean</h4><p>1、了解BlueOcean是什么之前，我谈谈做持续集成这么久之后，想达到新目标：</p>
+<hr>
+<p>提取出公有部分封装为公有JOB<br>实现pipeline对其他JOB的调用和逻辑的判断<br>实现多节点同时并发build</p>
+<hr>
+<p>好了，目前BlueOcean貌似支持，虽然只是以插件形式存在，需要Jenkins 2.7版本以上才支持，我就是用brew install jenkins安装的jenkins怎么都无法安装上BlueOcean，所以我采用tomacat加jenkins.war来实现安装。</p>
+<p>2、安装<br>系统管理-&gt;管理插件-&gt;可选插件，选择BlueOcean beta-&gt;restart。</p>
+<p>安装完毕后，BlueOcean入口在菜单栏居中: “Open Blue Ocean”，进去后可以看到全新的UI：<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/blueocean01.png" alt="Blue Ocean进入界面"></p>
+<p>3、开始尝试<br>(1)新建一个Pipeline项目，配置如下：<br>选择Pipeline script：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">#!/usr/bin/env groovy</div><div class="line"></div><div class="line">node &#123;</div><div class="line">   stage(&apos;Clone Code&apos;) &#123; // for display purposes</div><div class="line">      git branch: &apos;master&apos;, credentialsId: &apos;diaojunxian&apos;, url: &apos;ssh://diaojunxian@internal.smartdevices.com.cn:29418/apps/MIFit2-iOS&apos;</div><div class="line"></div><div class="line">   &#125;</div><div class="line">   stage(&apos;build&apos;) &#123;</div><div class="line">       sh &quot;ci_ios/xcode-build/ipa-inhouse/mifit-inhouse-upgrade.sh&quot;</div><div class="line">       </div><div class="line">   &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>(2)可以看构建流程:<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/blueocean02.png" alt="Blue Ocean构建流程"></p>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>现在只是一个beta版本，社区还不活跃，比如还不会同时拉取两个repo，比如还不会解决参数化。<br>慢慢来吧，这是一个过程，但是必须经历。。。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;由于电脑系统更换过，本地安装的jenkins已经没有了，为了验证BlueOcean，决定重新安装jenkins。&lt;br&gt;之前一直用&lt;code&gt;brew install jenkins&lt;/code&gt;，这次决定手动安装，通过war包和tomcat启动。&lt;/p&gt;
+&lt;h4 id=&quot;
+    
+    </summary>
+    
+    
+  </entry>
   
   <entry>
     <title>持续集成实施(十四)——Xcode Server配置(二)</title>
@@ -638,39 +679,6 @@
 &lt;hr&gt;
 &lt;h3 id=&quot;命令行执行&quot;&gt;&lt;a href=&quot;#命令行执行&quot; class=&quot;headerlink&quot; title=&quot;命令行执行&quot;&gt;&lt;/a&gt;命令行执行&lt;/h3&gt;&lt;hr&gt;
 &lt;p&gt;采用的iOS测试
-    
-    </summary>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>iOS自动化实践——jenkins持续集成(二)</title>
-    <link href="http://yoursite.com/2016/08/17/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94jenkins%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90-%E4%BA%8C/"/>
-    <id>http://yoursite.com/2016/08/17/iOS自动化实践——jenkins持续集成-二/</id>
-    <published>2016-08-17T07:30:23.000Z</published>
-    <updated>2016-08-25T02:02:39.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>上接<a href="https://diaojunxian.github.io/2016/07/11/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94jenkins%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90/" target="_blank" rel="external">iOS自动化实践——jenkins持续集成打包(一)</a>，已经实现了命令行打包，以后想要实现在jenkins页面展示扫描二维码和安装链接。</p>
-<hr>
-<h4 id="1、二维码获取"><a href="#1、二维码获取" class="headerlink" title="1、二维码获取"></a>1、二维码获取</h4><hr>
-<p>选择通过蒲公英上传app的api，然后python语言实现。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line">def payload(file, userkey, apikey):</div><div class="line">    url = &apos;https://www.pgyer.com/apiv1/app/upload&apos;</div><div class="line">    data=&#123;</div><div class="line">        &apos;uKey&apos;:userkey,</div><div class="line">        &apos;_api_key&apos;:apikey</div><div class="line">    &#125;</div><div class="line">    file_ipa = file+&apos;/MiFit.ipa&apos;</div><div class="line">    ipa_file=&#123;&apos;file&apos;:open(file_ipa, &apos;rb&apos;)&#125;</div><div class="line">    headers=&#123;</div><div class="line">        &apos;enctype&apos;:&apos;multipart/form-data&apos;</div><div class="line">    &#125;</div><div class="line">    try_times = 0</div><div class="line">    while try_times &lt; 5:</div><div class="line">        try:</div><div class="line">            response = requests.post(url, headers=headers,</div><div class="line">                files=ipa_file ,data=data)</div><div class="line">            assert response.status_code == requests.codes.ok</div><div class="line">            result = response.json()</div><div class="line">            appDownloadPageURL = parseUploadResult(result)</div><div class="line">            return appDownloadPageURL</div><div class="line">        except requests.exceptions.ConnectionError:</div><div class="line">            print &apos;requests.exceptions.ConnectionError occured&apos;</div><div class="line">            time.sleep(50)</div><div class="line">            try_times += 1</div><div class="line">        except Exception as e:</div><div class="line">            time.sleep(50)</div><div class="line">            try_times += 1</div><div class="line">        if try_times &gt;= 5:</div><div class="line">            raise Exception(&apos;Upload ipa failed&apos;)</div></pre></td></tr></table></figure></p>
-<p>获取二维码的短链接<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">appQRCodeURL = parseQRCodeImageUrl(data)</div><div class="line">response = requests.get(appQRCodeURL)</div><div class="line">build_image = build_path+&apos;/image&apos;</div><div class="line">if not os.path.exists(build_image):</div><div class="line">    os.makedirs(build_image)</div><div class="line">QR_image_file_path = os.path.join(build_image, &apos;MiFit.png&apos;)</div><div class="line">with open(QR_image_file_path, &apos;wb&apos;) as f:</div><div class="line">    f.write(response.content)</div></pre></td></tr></table></figure></p>
-<p>会发现每次上传安装包后返回的二维码图片是一个短链接，这个短连接居然是固定的（对同一个账号而言）。这个短连接总是指向最近生成的二维码图片，但是对于二维码图片的唯一URL地址，平台并没有在响应中进行返回。在这种情况下，我们每次构建完成后保存二维码图片的URL链接就没有意义了。<br>我的做法是将返回的二维码图片短链接将二维码图片下载并保存到本地，然后在build描述信息中引用该图片的Jenkins地址。</p>
-<hr>
-<h4 id="2、二维码在jenkins上展示"><a href="#2、二维码在jenkins上展示" class="headerlink" title="2、二维码在jenkins上展示"></a>2、二维码在jenkins上展示</h4><hr>
-<p>二维码图片的URL链接有了，那要怎样才能将二维码图片展示在Jenkins项目的历史构建列表中呢？<br>这里需要用到另外一个插件，description setter plugin。安装该插件后，在【Post-build Actions】栏目中会多出description setter功能，可以实现构建完成后设置当次build的描述信息。这个描述信息不仅会显示在build页面中，同时也会显示在历史构建列表中。<br>有了这个前提，要将二维码图片展示在历史构建列表中貌似就可以实现了，能直观想到的方式就是采用HTML的img标签，将<code>&lt;img src=&#39;QR_image_file_path&#39;&gt;</code>写入到build描述信息中。<br>这个方法的思路是正确的，不过这么做以后并不会实现我们预期的效果。<br>这是因为Jenkins出于安全的考虑，所有描述信息的Markup Formatter默认都是采用Plain text模式，在这种模式下是不会对build描述信息中的HTML编码进行解析的。<br>要改变也很容易，Manage Jenkins -&gt; Configure Global Security，将Markup Formatter的设置更改为Safe HTML即可。<br>更改配置后，我们就可以在build描述信息中采用HTML的img标签插入图片了。</p>
-<hr>
-<p>最后的效果<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/jenkins_二维码2.png" alt="展示"></p>
-<hr>
-<h4 id="遇到的问题"><a href="#遇到的问题" class="headerlink" title="遇到的问题"></a>遇到的问题</h4><p>1、<code>&lt;img src=&#39;QR_image_file_path&#39;&gt;</code>写入本地的png生成路径，总是不能展示图片，类似于这样:</p>
-<hr>
-<p><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/jenkins_二维码.png" alt="出错的展示"><br>解决方案：放入png的Jenkins地址。这里的地址可以在工作目录中查看。<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/jenkins_二维码1.png" alt="工作目录"></p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;上接&lt;a href=&quot;https://diaojunxian.github.io/2016/07/11/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94j
     
     </summary>
     
