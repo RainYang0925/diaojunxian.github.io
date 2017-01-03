@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2016-12-23T02:05:00.000Z</updated>
+  <updated>2017-01-03T00:33:36.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,38 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Flask API 序列化和反序列化</title>
+    <link href="http://yoursite.com/2017/01/03/Flask-API-%E5%BA%8F%E5%88%97%E5%8C%96%E5%92%8C%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/"/>
+    <id>http://yoursite.com/2017/01/03/Flask-API-序列化和反序列化/</id>
+    <published>2017-01-03T00:33:14.000Z</published>
+    <updated>2017-01-03T00:33:36.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>今天是2016的最后一天，顺便整理了一下手头的资料，看到Flask中关于字符串处理当时踩得坑，反思的同时也对接口处理的序列化和反序列化有了较深的体会。</p>
+<h3 id="前期"><a href="#前期" class="headerlink" title="前期"></a>前期</h3><p>我觉得我做事可能上手的确很快，比如当时写<code>API</code>时，刚存入<code>sqlite</code>中存入类型是以<code>string</code>形式存入，以<code>GET</code>接口展示时候，以<code>return json.loads()</code>，其实对这样操作一直很懵懂，现在谈谈自己的理解：</p>
+<blockquote>
+<p>当时，我需要以字符串形式存入，其实是序列化过程，把python的对象编码转换为json格式的字符串，而展示的时候，其实是反序列化过程，把json格式字符串解码为python数据对象。在python的标准库中，专门提供了json处理这部分。</p>
+</blockquote>
+<p>先看看json的方法：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">#coding=utf-8</div><div class="line"></div><div class="line">import json</div><div class="line"></div><div class="line">print dir(json)</div><div class="line">print json.__all__</div></pre></td></tr></table></figure></p>
+<p>输出内容：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[&apos;dump&apos;, &apos;dumps&apos;, &apos;load&apos;, &apos;loads&apos;, &apos;JSONDecoder&apos;, &apos;JSONEncoder&apos;]</div></pre></td></tr></table></figure></p>
+<h3 id="进入正题"><a href="#进入正题" class="headerlink" title="进入正题"></a>进入正题</h3><p>我们定义一个字典，通过json把它序列化为json格式的字符串，见实现的代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">#coding=utf-8</div><div class="line">import  json</div><div class="line">dict1=&#123;&apos;name&apos;:&apos;diaojunxian&apos;,&apos;age&apos;:22,&apos;address&apos;:&apos;xian&apos;&#125;</div><div class="line">print u&apos;未序列化前的数据类型为:&apos;,type(dict1)</div><div class="line">print u&apos;未序列化前的数据:&apos;,dict1</div><div class="line">#对dict1进行序列化的处理</div><div class="line">str1=json.dumps(dict1)</div><div class="line">print u&apos;序列化后的数据类型为:&apos;,type(str1)</div><div class="line">print u&apos;序列化后的数据为:&apos;,str1</div></pre></td></tr></table></figure></p>
+<p>输出内容：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">未序列化前的数据类型为: &lt;type &apos;dict&apos;&gt;</div><div class="line">未序列化前的数据: &#123;&apos;age&apos;: 22, &apos;name&apos;: &apos;diaojunxian&apos;, &apos;address&apos;: &apos;xian&apos;&#125;</div><div class="line">序列化后的数据类型为: &lt;type &apos;str&apos;&gt;</div><div class="line">序列化后的数据为: &#123;&quot;age&quot;: 22, &quot;name&quot;: &quot;diaojunxian&quot;, &quot;address&quot;: &quot;xian&quot;&#125;</div></pre></td></tr></table></figure></p>
+<p>通过如上的代码以及结果可以看到，这就是一个序列化的过程，简单的说就是把python的数据类型转换为json格式的字符串。下来我们再反序列化，把json格式的字符串解码为python的数据对象，见实现的代码和输出：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">#对str1反序列化</div><div class="line">dict2=json.loads(str1)</div><div class="line">print u&apos;反序列化后的数据类型:&apos;,type(dict2)</div><div class="line">print u&apos;反序列化后的数据：&apos;,dict2</div></pre></td></tr></table></figure></p>
+<p>输出内容：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">反序列化后的数据类型: &lt;type &apos;dict&apos;&gt;</div><div class="line">反序列化后的数据： &#123;u&apos;age&apos;: 22, u&apos;name&apos;: u&apos;diaojunxian&apos;, u&apos;address&apos;: u&apos;xian&apos;&#125;</div></pre></td></tr></table></figure></p>
+<h3 id="中文处理"><a href="#中文处理" class="headerlink" title="中文处理"></a>中文处理</h3><p>在编程过程还发现一个问题，在序列化时，中文汉字总是被转换为unicode码，在dumps函数中添加参数ensure_ascii=False即可解决。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">#coding=utf-8</div><div class="line">import json;  </div><div class="line">  </div><div class="line">#原始json数据  </div><div class="line">jsonData=[&#123;&apos;name&apos;:&apos;刁俊先&apos;,&apos;age&apos;:30,&apos;sex&apos;:&apos;男&apos;&#125;,&#123;&apos;name&apos;:&apos;文静&apos;,&apos;age&apos;:20,&apos;sex&apos;:&apos;女&apos;&#125;];  </div><div class="line">  </div><div class="line">#序列化，然后输出  </div><div class="line">jsonStr=json.dumps(jsonData,ensure_ascii=False);  </div><div class="line">print(&quot;序列化结果：&quot;);  </div><div class="line">print(jsonStr);  </div><div class="line">  </div><div class="line">#再将jsonStr反序列化为json格式  </div><div class="line">jsonData=json.loads(jsonStr, strict=False);  </div><div class="line">print(&quot;反序列化整体结果：&quot;);  </div><div class="line">print(jsonData);  </div><div class="line">#然后接口返回为</div><div class="line">print json.dumps(jsonData, ensure_ascii=False, indent=4)</div></pre></td></tr></table></figure></p>
+<p>输出内容：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">序列化结果：</div><div class="line">[&#123;&quot;age&quot;: 30, &quot;name&quot;: &quot;刁俊先&quot;, &quot;sex&quot;: &quot;男&quot;&#125;, &#123;&quot;age&quot;: 20, &quot;name&quot;: &quot;文静&quot;, &quot;sex&quot;: &quot;女&quot;&#125;]</div><div class="line">反序列化整体结果：</div><div class="line">[&#123;u&apos;age&apos;: 30, u&apos;name&apos;: u&apos;\u5201\u4fca\u5148&apos;, u&apos;sex&apos;: u&apos;\u7537&apos;&#125;, &#123;u&apos;age&apos;: 20, u&apos;name&apos;: u&apos;\u6587\u9759&apos;, u&apos;sex&apos;: u&apos;\u5973&apos;&#125;]</div><div class="line">然后接口返回为：</div><div class="line">[</div><div class="line">    &#123;</div><div class="line">        &quot;age&quot;: 30, </div><div class="line">        &quot;name&quot;: &quot;刁俊先&quot;, </div><div class="line">        &quot;sex&quot;: &quot;男&quot;</div><div class="line">    &#125;, </div><div class="line">    &#123;</div><div class="line">        &quot;age&quot;: 20, </div><div class="line">        &quot;name&quot;: &quot;文静&quot;, </div><div class="line">        &quot;sex&quot;: &quot;女&quot;</div><div class="line">    &#125;</div><div class="line">]</div></pre></td></tr></table></figure></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;今天是2016的最后一天，顺便整理了一下手头的资料，看到Flask中关于字符串处理当时踩得坑，反思的同时也对接口处理的序列化和反序列化有了较深的体会。&lt;/p&gt;
+&lt;h3 id=&quot;前期&quot;&gt;&lt;a href=&quot;#前期&quot; class=&quot;headerlink&quot; title=&quot;前期&quot;&gt;&lt;
+    
+    </summary>
+    
+    
+  </entry>
   
   <entry>
     <title>持续集成实施(十五)——BlueOcean</title>
@@ -647,38 +679,6 @@
       &lt;p&gt;WebDriverAgent使用过程中，发现Wifi可能会存在连接不稳定的情况，这个时候可以借助usb进行连接通信，怎么做呢？&lt;/p&gt;
 &lt;hr&gt;
 &lt;h2 id=&quot;实现方式&quot;&gt;&lt;a href=&quot;#实现方式&quot; class=&quot;headerlink&quot; title=&quot;实现方式&quot;&gt;&lt;/
-    
-    </summary>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>iOS自动化实践——jenkins持续集成(三)</title>
-    <link href="http://yoursite.com/2016/08/25/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94jenkins%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90-%E4%B8%89/"/>
-    <id>http://yoursite.com/2016/08/25/iOS自动化实践——jenkins持续集成-三/</id>
-    <published>2016-08-25T02:06:34.000Z</published>
-    <updated>2016-08-25T07:57:43.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>前面写了git拉取代码，命令行打包，接着加上用例执行和报告展示。</p>
-<hr>
-<h3 id="命令行执行"><a href="#命令行执行" class="headerlink" title="命令行执行"></a>命令行执行</h3><hr>
-<p>采用的iOS测试框架是pytest+unittest，可用命令行执行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">cd /Users/djx/Documents/ui_testing/</div><div class="line">py.test -s -v -pyargs 用例目录 --server-address=(url) </div><div class="line">--app-udid=(ios udid) --app-meta=(设置的meta)</div><div class="line">--junit-xml=junit.xml</div></pre></td></tr></table></figure></p>
-<hr>
-<h3 id="报告展示"><a href="#报告展示" class="headerlink" title="报告展示"></a>报告展示</h3><hr>
-<p>1、采用HTML Publisher Plugin<br>它的功能是将本地生成的HTML的报告展示出来，但是有个问题，由于我自己生成的html里面的css和js路径是本地的，故而放在jenkins内不能展示，只能看到文字却看不到样式。<br>2、采用Publish JUnit test result report<br>这里的功能是将.xml报告通过JUnit展示，增加构建后操作步骤，选择”publish junittest result<br>report”，测试报告栏输入：*.xml,jenkins将会从该job的workspace去查找xml格式的junit报告。</p>
-<hr>
-<p>出现的问题：</p>
-<hr>
-<p>1、Publish JUnit test result report这里是通过把执行目录里面的junit.xml在生成以后复制到jenkins的workspace里面，然后调用展示，而且测试报告栏输入不能输入全路径，输入相对路径。<br>2、发现在jenkins构建中，执行的pytest自动化测试之后，会跳出命令，不执行将junit.xml复制到workspace的shell命令，可在jenkins构建后操作中有execute a set of scripts，在这里选择添加shell命令即可。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;前面写了git拉取代码，命令行打包，接着加上用例执行和报告展示。&lt;/p&gt;
-&lt;hr&gt;
-&lt;h3 id=&quot;命令行执行&quot;&gt;&lt;a href=&quot;#命令行执行&quot; class=&quot;headerlink&quot; title=&quot;命令行执行&quot;&gt;&lt;/a&gt;命令行执行&lt;/h3&gt;&lt;hr&gt;
-&lt;p&gt;采用的iOS测试
     
     </summary>
     
