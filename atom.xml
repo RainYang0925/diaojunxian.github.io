@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-01-03T00:33:36.000Z</updated>
+  <updated>2017-01-03T01:20:30.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,32 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Flask部署</title>
+    <link href="http://yoursite.com/2017/01/03/Flask%E9%83%A8%E7%BD%B2/"/>
+    <id>http://yoursite.com/2017/01/03/Flask部署/</id>
+    <published>2017-01-03T00:37:05.000Z</published>
+    <updated>2017-01-03T01:20:30.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>已经搭建好了一个Flask应用，当前启动方式是<code>gunicorn -b 0.0.0.0:8000 wsgi:application</code>,但是每次部署的时候都需要先<code>cat router.pid</code>，然后<code>kill</code>掉进程，代码更新后，再重启应用。显得有待呢让麻烦，网上有一票的关于Flask部署，以<code>gunicorn + flask ++ supervisor</code>部署测试。</p>
+<h3 id="创建虚拟环境-virtualenv"><a href="#创建虚拟环境-virtualenv" class="headerlink" title="创建虚拟环境 virtualenv"></a>创建虚拟环境 virtualenv</h3><p>在一个系统中创建不同的 Python 隔离环境，相互之间还不会影响，为了使系统保持干净，遂决定用 virtualenv 跑应用程序，创建一个容易识别的目录，开始安装，再创建项目目录 super，然后激活环境：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">sudo pip install virtualenv</div><div class="line">mkdir ~/Documents/web_project &amp;&amp; cd ~/Documents/web_project</div><div class="line">virtualenv env</div><div class="line">source env/bin/activate</div></pre></td></tr></table></figure></p>
+<h3 id="安装各种需求库"><a href="#安装各种需求库" class="headerlink" title="安装各种需求库"></a>安装各种需求库</h3><p>创建了虚拟环境以后，需要在虚拟环境里面安装各种依赖库。很简单：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">pip install -r requiremensts.txt</div></pre></td></tr></table></figure></p>
+<p>一系列时间等待以后，就安装好了。</p>
+<h3 id="生成supervisor配置文件"><a href="#生成supervisor配置文件" class="headerlink" title="生成supervisor配置文件"></a>生成supervisor配置文件</h3><p>supervisor是守护进程的工具，首先需要生成配置文件<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">cd ~/Documents/web_project</div><div class="line">echo_supervisord_conf &gt; supervisor.conf</div></pre></td></tr></table></figure></p>
+<p>然后修改配置文件，我选择的方式是全部删除当前内容，放入我已经测试写好的配置内容：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div></pre></td><td class="code"><pre><div class="line">[unix_http_server]</div><div class="line">file=/tmp/supervisor.sock   ; (the path to the socket file)</div><div class="line"></div><div class="line"></div><div class="line">[inet_http_server]         ; inet (TCP) server disabled by default</div><div class="line">port=0.0.0.0:9001       ; (ip_address:port specifier, *:port for all iface)</div><div class="line">username=xx              ; (default is no username (open server))</div><div class="line">password=xx               ; (default is no password (open server))</div><div class="line"></div><div class="line">[supervisord]</div><div class="line">logfile=/tmp/supervisord.log ; (main log file;default $CWD/supervisord.log)</div><div class="line">logfile_maxbytes=50MB        ; (max main logfile bytes b4 rotation;default 50MB)</div><div class="line">logfile_backups=10           ; (num of main logfile rotation backups;default 10)</div><div class="line">loglevel=info                ; (log level;default info; others: debug,warn,trace)</div><div class="line">pidfile=/tmp/supervisord.pid ; (supervisord pidfile;default supervisord.pid)</div><div class="line">nodaemon=false               ; (start in foreground if true;default false)</div><div class="line">minfds=1024                  ; (min. avail startup file descriptors;default 1024)</div><div class="line">minprocs=200                 ; (min. avail process descriptors;default 200)</div><div class="line"></div><div class="line">[rpcinterface:supervisor]</div><div class="line">supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface</div><div class="line"></div><div class="line">[supervisorctl]</div><div class="line">serverurl=unix:///tmp/supervisor.sock ; use a unix:// URL  for a unix socket</div><div class="line">serverurl=http://0.0.0.0:9001 ; use an http:// url to specify an inet socket</div><div class="line">username=xx              ; should be same as http_username if set</div><div class="line">password=xx                ; should be same as http_password if set</div><div class="line">;prompt=mysupervisor         ; cmd line prompt (default &quot;supervisor&quot;)</div><div class="line">;history_file=~/.sc_history  ; use readline history if available</div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line">[include]</div><div class="line">files = /etc/supervisor/*.conf</div><div class="line"></div><div class="line">[program:webhook]</div><div class="line">directory = /Users/djx/Documents/web_project/ci_ios/webhook ; 程序的启动目录</div><div class="line">command = /Users/djx/Documents/web_project/env/bin/gunicorn -b 0.0.0.0:8000 wsgi:application  ; 启动命令，可以看出与手动在命令行启动的命令是一样的</div><div class="line">autostart = true     ; 在 supervisord 启动的时候也自动启动</div><div class="line">startsecs = 0        ; 启动 5 秒后没有异常退出，就当作已经正常启动了</div><div class="line">autorestart = false   ; 程序异常退出后自动重启</div><div class="line">startretries = 0     ; 启动失败自动重试次数，默认是 3</div><div class="line">redirect_stderr = true  ; 把 stderr 重定向到 stdout，默认 false</div><div class="line">stdout_logfile_maxbytes = 20MB  ; stdout 日志文件大小，默认 50MB</div><div class="line">stdout_logfile_backups = 20     ; stdout 日志文件备份数</div><div class="line">stdout_logfile=/tmp/gunicorn.log</div><div class="line">stderr_logfile=/tmp/gunicorn.err</div></pre></td></tr></table></figure></p>
+<p>可以通过<code>supervisor -c supervisor.conf</code>启动。<br>而且有一个web界面可以管理查看进程。<br><code>http://127.0.0.1:9001</code><br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/supervisord01.png" alt="Supervisord进程管理界面"></p>
+<h3 id="supervisor相关命令介绍"><a href="#supervisor相关命令介绍" class="headerlink" title="supervisor相关命令介绍"></a>supervisor相关命令介绍</h3><p>supervisor的基本使用命令<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">supervisord -c supervisor.conf    </div><div class="line">supervisorctl -c supervisor.conf status                  查看supervisor的状态                                      </div><div class="line">supervisorctl -c supervisor.conf reload                  重新载入 配置文件</div><div class="line">supervisorctl -c supervisor.conf start [all]|[appname]   启动指定/所有 supervisor 管理的程序进程</div><div class="line">supervisorctl -c supervisor.conf stop [all]|[appname]    关闭指定/所有 supervisor 管理的程序进程</div></pre></td></tr></table></figure></p>
+<h3 id="后续会加入nginx的配置，但是我还没有自己理清楚，未完待续。。。"><a href="#后续会加入nginx的配置，但是我还没有自己理清楚，未完待续。。。" class="headerlink" title="后续会加入nginx的配置，但是我还没有自己理清楚，未完待续。。。"></a>后续会加入nginx的配置，但是我还没有自己理清楚，未完待续。。。</h3>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;已经搭建好了一个Flask应用，当前启动方式是&lt;code&gt;gunicorn -b 0.0.0.0:8000 wsgi:application&lt;/code&gt;,但是每次部署的时候都需要先&lt;code&gt;cat router.pid&lt;/code&gt;，然后&lt;code&gt;kill&lt;/code
+    
+    </summary>
+    
+    
+  </entry>
   
   <entry>
     <title>Flask API 序列化和反序列化</title>
@@ -647,38 +673,6 @@
 &lt;p&gt;为了实现持续集成，今天简介一下如何在一台新的mac上搭建持续集成iOS测试的环境。&lt;/p&gt;
 &lt;hr&gt;
 &lt;h4 id=&quot;一、安装各种依赖&quot;&gt;&lt;a href=&quot;#一、安装各种依赖&quot; class=&quot;headerlink&quot; title=&quot;一、安装各种依赖&quot;&gt;&lt;/a&gt;一、安
-    
-    </summary>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>iOS自动化实践——WebDriverAgent(七)</title>
-    <link href="http://yoursite.com/2016/08/30/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94WebDriverAgent-%E4%B8%83/"/>
-    <id>http://yoursite.com/2016/08/30/iOS自动化实践——WebDriverAgent-七/</id>
-    <published>2016-08-30T07:41:46.000Z</published>
-    <updated>2016-08-30T08:21:31.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>WebDriverAgent使用过程中，发现Wifi可能会存在连接不稳定的情况，这个时候可以借助usb进行连接通信，怎么做呢？</p>
-<hr>
-<h2 id="实现方式"><a href="#实现方式" class="headerlink" title="实现方式"></a>实现方式</h2><hr>
-<p>1、借助libusbmuxd<br>下载地址：<code>https://github.com/libimobiledevice/libusbmuxd</code><br>2、libusbmuxd实现原理<br>pc端出去的http数据，走USB协议，然后USB回传回来后，映射成本地端口，走localhost 来进行本地HTTP协议，不用走wifi这种网络路由转发。Webdriveragent使用server端和client端通信，正好可以借助libusbmuxd。<br>3、使用方发：</p>
-<hr>
-<p>(1)clone到本地：git clone <code>https://github.com/libimobiledevice/libusbmuxd.git</code><br>(2)下载依赖：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">brew install libplist</div><div class="line">brew install usbmuxd</div><div class="line">brew install cmake</div><div class="line">brew install automake</div><div class="line">brew install autoconf</div><div class="line">brew install libtool</div><div class="line">brew install pkg-config</div><div class="line">brew install gcc</div></pre></td></tr></table></figure></p>
-<p>需要注意的是libusbmuxd项目README中make和autoheader没有安装成功。<br>(3)编译安装：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">./autogen.sh</div><div class="line">make</div><div class="line">sudo make install</div></pre></td></tr></table></figure></p>
-<p>(4)运行：<code>iproxy LOCAL_TCP_PORT DEVICE_TCP_PORT [UDID]</code>，这里的LOCAL_TCP_PORT填写5000，因为Webdriveragent源码中写的local本地port是5000，DEVICE_TCP_PORT这里写的是8100，因为启动server以后监听的端口号是8100。<br>(5)启动iproxy以后，正常启动Webdriveragent server，然后在client端用例中传入的ip:port是<br><code>localhost:5000</code>即可。</p>
-<hr>
-<h2 id="遇到的问题"><a href="#遇到的问题" class="headerlink" title="遇到的问题"></a>遇到的问题</h2><hr>
-<p>1、出现libusbmuxd项目README中make和autoheader没有安装成功。<br>最后方案：未解决跳过。<br>2、出现./autogen.sh执行错误。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">error: Package requirements (libplist &gt;= 1.11) were not met:</div><div class="line">Package &apos;libxml-2.0&apos;, required by &apos;libplist&apos;, not found</div><div class="line">Consider adjusting the PKG_CONFIG_PATH environment variable if you</div><div class="line">installed software in a non-standard prefix.</div></pre></td></tr></table></figure></p>
-<p>最后方案：执行./autogen.sh前，先执行下面的两条命令，然后编译通过。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">export libplist_CFLAGS=&apos;-I/usr/local/Cellar/libplist/1.12/include -I/usr/</div><div class="line">include/libxml2&apos;</div><div class="line">export libplist_LIBS=&apos;-L/usr/local/Cellar/libplist/1.12/lib -lplist&apos;</div></pre></td></tr></table></figure></p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;WebDriverAgent使用过程中，发现Wifi可能会存在连接不稳定的情况，这个时候可以借助usb进行连接通信，怎么做呢？&lt;/p&gt;
-&lt;hr&gt;
-&lt;h2 id=&quot;实现方式&quot;&gt;&lt;a href=&quot;#实现方式&quot; class=&quot;headerlink&quot; title=&quot;实现方式&quot;&gt;&lt;/
     
     </summary>
     
