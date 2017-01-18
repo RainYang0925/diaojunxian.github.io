@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-01-03T01:20:30.000Z</updated>
+  <updated>2017-01-18T06:25:15.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,69 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>持续集成实施(十六)——Whistle抓包</title>
+    <link href="http://yoursite.com/2017/01/18/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E5%AE%9E%E6%96%BD-%E5%8D%81%E5%85%AD-%E2%80%94%E2%80%94Whistle%E6%8A%93%E5%8C%85/"/>
+    <id>http://yoursite.com/2017/01/18/持续集成实施-十六-——Whistle抓包/</id>
+    <published>2017-01-18T06:01:02.000Z</published>
+    <updated>2017-01-18T06:25:15.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>最近需要抓包Axure软件发出的请求，之前一直使用的<code>Charles</code>，挺稳定的一个工具，最近不知道抽什么风，然后一番搜索之后，发现了<code>whistle</code>，简直神器，配置还非常简单，由于只在<code>MAC</code>上有使用体验，就简单介绍一下。</p>
+<h3 id="1、安装Node"><a href="#1、安装Node" class="headerlink" title="1、安装Node"></a>1、安装Node</h3><p>whistle支持v0.10.0以上版本的Node，为获取更好的性能，推荐安装最新版本的Node。</p>
+<p>如果你的系统已经安装了v0.10.0以上版本的Node，可以忽略此步骤，直接进入安装whistle的步骤，否则：</p>
+<p>访问<a href="https://nodejs.org/" target="_blank" rel="external">https://nodejs.org/</a> ，安装LTS版本的Node，默认安装即可。<br>安装完Node后，执行下面命令，查看当前Node版本</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ node -v</div><div class="line">v7.1.0</div></pre></td></tr></table></figure>
+<p>如果能正常输出Node的版本号，表示Node已安装成功(Windows系统可能需要重新打开cmd)。</p>
+<h3 id="2-安装whistle"><a href="#2-安装whistle" class="headerlink" title="2. 安装whistle"></a>2. 安装whistle</h3><p>Node安装成功后，执行如下npm命令安装whistle （Mac或Linux的非root用户需要在命令行前面加sudo，如：sudo npm install -g whistle）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ npm install -g whistle</div></pre></td></tr></table></figure>
+<p>whistle安装完成后，执行命令 whistle help 或 w2 help，查看whistle的帮助信息</p>
+<p>$ w2 help</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div></pre></td><td class="code"><pre><div class="line">Usage: w2 &lt;command&gt; [options]</div><div class="line"></div><div class="line">  Commands:</div><div class="line"></div><div class="line">    run       Start a front service</div><div class="line">    start     Start a background service</div><div class="line">    stop      Stop current background service</div><div class="line">    restart   Restart current background service</div><div class="line">    help      Display help information</div><div class="line"></div><div class="line">  Options:</div><div class="line"></div><div class="line">    -h, --help                                      output </div><div class="line">    usage information</div><div class="line">    -d, --debug                                     debug </div><div class="line">    mode</div><div class="line">    -l, --localUIHost [hostname]                    local ui </div><div class="line">    host(local.whistlejs.com by default)</div><div class="line">    -n, --username [username]                       login </div><div class="line">    username</div><div class="line">    -w, --password [password]                       login </div><div class="line">    password</div><div class="line">    -S, --storage [newStorageDir]                   the new </div><div class="line">    local storage directory</div><div class="line">    -C, --copy [storageDir]                         copy </div><div class="line">    storageDir to newStorageDir</div><div class="line">    -p, --port [port]                               whistle </div><div class="line">    port(8899 by default)</div><div class="line">    -m, --middlewares [script path or module name]  express </div><div class="line">    middlewares path(as: xx,yy/zz.js)</div><div class="line">    -u, --uipath [script path]                      web ui </div><div class="line">    plugin path</div><div class="line">    -t, --timeout [ms]                              request </div><div class="line">    timeout(36000 ms by default)</div><div class="line">    -s, --sockets [number]                          max </div><div class="line">    sockets(12 by default)</div><div class="line">    -V, --version                                   output </div><div class="line">    the version number</div><div class="line">    -c, --command &lt;command&gt;                         command </div><div class="line">    parameters (&quot;node --harmony&quot;)</div></pre></td></tr></table></figure>
+<p>如果能正常输出whistle的帮助信息，表示whistle已安装成功。</p>
+<h3 id="3-启动whistle"><a href="#3-启动whistle" class="headerlink" title="3. 启动whistle"></a>3. 启动whistle</h3><p>最新版本的whistle支持三种等价的命令whistle、w2、wproxy</p>
+<p>启动whistle:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ w2 start</div></pre></td></tr></table></figure>
+<p>Note: 如果要防止其他人访问配置页面，可以在启动时加上登录用户名和密码 -n yourusername -w yourpassword。</p>
+<p>重启whsitle:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ w2 restart</div></pre></td></tr></table></figure>
+<p>停止whistle:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ w2 stop</div></pre></td></tr></table></figure>
+<p>调试模式启动whistle(主要用于查看whistle的异常及插件开发):</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ w2 run</div></pre></td></tr></table></figure>
+<p>启动完whistle后，最后一步需要配置代理。</p>
+<h3 id="4-配置代理"><a href="#4-配置代理" class="headerlink" title="4. 配置代理"></a>4. 配置代理</h3><p><strong>配置信息</strong><br>代理服务器：127.0.0.1(如果部署在远程服务器或虚拟机上，改成对应服务器或虚拟机的ip即可)<br>默认端口：8899(如果端口被占用，可以在启动是通过 -p 来指定新的端口，更多信息可以通过执行命令行 w2 help (v0.7.0及以上版本也可以使用w2 help) 查看)<br>勾选上 对所有协议均使用相同的代理服务器</p>
+<p>代理配置方式(把上面配置信息配置上即可)</p>
+<ul>
+<li><p>直接配置系统代理：</p>
+<p><a href="http://jingyan.baidu.com/article/a378c960849144b3282830dc.html" target="_blank" rel="external">Mac</a></p>
+</li>
+<li><p>安装浏览器代理插件 (推荐)<br>安装Chrome代理插件： whistle-for-chrome</p>
+</li>
+</ul>
+<p><strong>访问配置页面</strong><br>启动whistle及配置完代理后，用Chrome浏览器(由于css兼容性问题界面只支持Chrome浏览器)访问配置页面，如果能正常打开页面，whistle安装启动完毕，可以开始使用。<br>可以通过以下两种方式来访问配置页面：</p>
+<ul>
+<li>方式1：域名访问 <a href="http://local.whistlejs.com/" target="_blank" rel="external">http://local.whistlejs.com/</a></li>
+<li>方式2：通过ip+端口来访问，形式如 <a href="http://whistleServerIP:whistlePort+1/" target="_blank" rel="external">http://whistleServerIP:whistlePort+1/</a> e.g. <a href="http://127.0.0.1:8900" target="_blank" rel="external">http://127.0.0.1:8900</a><br>Https</li>
+</ul>
+<p>用来下载根证书、隐藏connect类型的请求、开启Https拦截功能。</p>
+<h3 id="5-Https"><a href="#5-Https" class="headerlink" title="5. Https"></a>5. Https</h3><p><strong>安装根证书</strong><br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/whistlejs00.png" alt="证书安装"><br>如上图下载完根证书后点击rootCA.crt文件，弹出根证书安装对话框。</p>
+<p><strong>开启拦截Https</strong><br>图中的打开的对话框有两个checkbox：<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/whistlejs01.png" alt="开启拦截"></p>
+<ul>
+<li>Hide HTTPS CONNECTs：隐藏connect类型的请求</li>
+<li>Intercept HTTPS CONNECTs：开启Https拦截功能，只有勾上这个checkbox及装好根证书，whistle才能看到HTTPS、Websocket的请求</li>
+</ul>
+<p>最后效果如图所示：<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/whistlejs02.png" alt="Axure抓包"></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;最近需要抓包Axure软件发出的请求，之前一直使用的&lt;code&gt;Charles&lt;/code&gt;，挺稳定的一个工具，最近不知道抽什么风，然后一番搜索之后，发现了&lt;code&gt;whistle&lt;/code&gt;，简直神器，配置还非常简单，由于只在&lt;code&gt;MAC&lt;/code&gt;上有使用体
+    
+    </summary>
+    
+    
+  </entry>
   
   <entry>
     <title>Flask部署</title>
@@ -303,29 +366,60 @@
   </entry>
   
   <entry>
-    <title>持续集成实施(九)</title>
+    <title></title>
     <link href="http://yoursite.com/2016/11/15/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E5%AE%9E%E6%96%BD-%E4%B9%9D/"/>
     <id>http://yoursite.com/2016/11/15/持续集成实施-九/</id>
     <published>2016-11-15T09:21:03.000Z</published>
-    <updated>2016-11-15T11:32:41.000Z</updated>
+    <updated>2017-01-06T02:50:40.000Z</updated>
     
-    <content type="html"><![CDATA[<p>今天记录为mac下终端命令行设置代理的过程，为了下载pod，为了下载pod，为了下载pod，参考了杨占领分享的北京同事写的，sxiaojian.com/2016/07/04/terminal-shadowsocks/，过程是类似的但是，我按照他的流程没有走通。。。不知道是哪里设置错了反正按照下面的流程我走通了。。。。</p>
+    <content type="html"><![CDATA[<p>持续集成测试工具在mac中有使用较为频繁的Xcode Server服务器，它号称集成了git版本管理和持续集成服务，而且还有文档管理的功能。如下图所示：<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server01.png" alt="Xcode Server工作架构"></p>
+<p>下面简单描述一下配置过程，当然很多细节还在具体摸索过程中，当前只是跑通了mac客户端和mac Xcode Server服务端。</p>
 <hr>
-<h3 id="一、shadowsocks下载使用"><a href="#一、shadowsocks下载使用" class="headerlink" title="一、shadowsocks下载使用"></a>一、shadowsocks下载使用</h3><p>官方下载就好，对了这里提一下，我花了5块钱，购买了5天体验版。。。。</p>
-<h3 id="二、ProxyChains-NG"><a href="#二、ProxyChains-NG" class="headerlink" title="二、ProxyChains-NG"></a>二、ProxyChains-NG</h3><h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p>使用 Homebrew 安装<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">brew install proxychains-ng</div></pre></td></tr></table></figure></p>
-<h4 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h4><p>编辑配置文件<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo vim /usr/local/Cellar/proxychains-ng/4.11/etc/proxychains.conf</div></pre></td></tr></table></figure></p>
-<p>在 [ProxyList] 下面（也就是末尾）加入代理类型，代理地址和端口<br>注释掉原来的代理并添加<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">socks5  127.0.0.1 1080</div></pre></td></tr></table></figure></p>
-<p>ps: 默认的socks4 127.0.0.1 9095是tor代理，而socks5 127.0.0.1 1080是shadowsocks的代理。</p>
-<p>默认是：<br>strict_chain - 按照后面列表中出现的代理服务器的先后顺序组成一条链，要求所有的代理服务器都是有效的。</p>
-<p>ps: 4.10 是proxychains-ng的版本好，具体参看自己的版本。<br>测试：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">proxychains4 curl www.google.com</div></pre></td></tr></table></figure></p>
-<h3 id="强调一下：Mac-OS-10-11-恢复模式下-关闭-SIP"><a href="#强调一下：Mac-OS-10-11-恢复模式下-关闭-SIP" class="headerlink" title="强调一下：Mac OS 10.11 恢复模式下 关闭 SIP"></a>强调一下：Mac OS 10.11 恢复模式下 关闭 SIP</h3><p>其实我在之前的持续集成（六）已经提到过。<br>Command ＋ R 进入恢复模式，选择Terminal 执行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">csrutil disenable --without debug</div><div class="line"></div><div class="line">Apple Internal: enabled</div><div class="line">Kext Signing: enabled</div><div class="line">Filesystem Protections: enabled</div><div class="line">Debugging Restrictions: enabled</div><div class="line">DTrace Restrictions: enabled</div><div class="line">NVRAM Protections: enabled</div></pre></td></tr></table></figure></p>
-<p>disable 是把 5 个都关了。。。<br>目测 proxychains 之类的需要加入 LD_PRELOAD 进行动态 HOOK<br>debug 那个就是保护了关键路径上的 bin 不被劫持<br>其他都是字面意思<br>保护的只有 rootless.conf 定义的目录文件</p>
-<p>后来下载通过proxychains4 pod install –verbose成功了。</p>
+<h3 id="一、配置Xcode-Server服务器"><a href="#一、配置Xcode-Server服务器" class="headerlink" title="一、配置Xcode Server服务器"></a>一、配置Xcode Server服务器</h3><p>1、apple给开发者可以凭开发者账号免费兑换os x server。免费兑换地址</p>
+<p><a href="https://developer.apple.com/osx/download/" target="_blank" rel="external">https://developer.apple.com/osx/download/</a></p>
+<p>2、下载os x server后点击安装。</p>
+<p>3、打开 Server 应用，以查看 OS X Server 中提供的服务列表。选择“Xcode”。</p>
+<p>点按“选取 Xcode”按钮，然后在“应用程序”文件夹中选择“Xcode”。Xcode 服务将自动启动。</p>
+<p><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server02.png" alt="Xcode Server启动服务"></p>
+<h3 id="二、配置Xcode客户端"><a href="#二、配置Xcode客户端" class="headerlink" title="二、配置Xcode客户端"></a>二、配置Xcode客户端</h3><p>1、打开客户端上的xcode然后，选择 XCode 的Preferences，然后选择“Accounts”，在底端点击加号按钮，选择“Add Server”。效果如图所示:<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server03.png" alt="Xcode客户端"></p>
+<p>2、打开xcode&gt;product&gt;create bot</p>
+<p>3、填写bot名称，选择Xcode Server服务器<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server04.png" alt="Xcode Bot配置"></p>
+<p>4、Actions：选择执行的动作</p>
+<p>   a、对代码进行静态分析</p>
+<p>   b、对代码进行单元测试</p>
+<p>   c、生成archive包（可以选择是否生成用户安装包）</p>
+<p>5、cleaning：选择在何时清理项目，有几个选项（总是、每天、每周、从不）</p>
+<p>6、configuration：选择编译配置（Debug、release）</p>
+<p>7、选择在何时Xcode Server服务器开始持续集成，有几个选项（定时、在有新代码提交时、手动）</p>
+<p>8、Before Integration 在开始持续集成前执行的脚本</p>
+<p>9、 After Integration在持续集成后执行的脚本</p>
+<h3 id="三、Xcode-Server服务器证书配置"><a href="#三、Xcode-Server服务器证书配置" class="headerlink" title="三、Xcode Server服务器证书配置"></a>三、Xcode Server服务器证书配置</h3><p>需要注意的是iOS最变态的就是证书管理了，这里也同样如此需要注意证书的配置。<br>1、配置Certificates</p>
+<ul>
+<li><p>打开钥匙串，将iPhone Developer: xxx和iPhone Distribution:xxx导出为.p12文件</p>
+</li>
+<li><p>导入装OS X Server的MAC的钥匙串中，这次需导入到钥匙串系统中，而不是登录中，持续集成生成包时证书由/usr/bin/codesign管理，所以需将codesign添加为允许访问证书的程序，在显示简介中选择 访问控制 &gt;始终通过这些应用程序访问 中点击加号，开始选择/usr/bin/codesign程序。选择完成后点击确认。由于usr是隐藏文件，在选择时使用快捷键 CMD+SHIFT+. 显示隐藏文件</p>
+</li>
+</ul>
+<p>2、将Provisioning Profiles拷贝到Xcode Server</p>
+<ul>
+<li><p>Xcode客户端描述文件保存在以下文件夹中User/Library/MobileDevice/ProvisioningProfiles</p>
+</li>
+<li><p>Xcode Server服务器描述文件保存在以下文件夹中 /Library/Developer/XcodeServer/ProvisioningProfiles，将Xcode客户端路径下的证书保存至Xcode Server服务器对应路径下</p>
+</li>
+</ul>
+<h3 id="四、开始构建"><a href="#四、开始构建" class="headerlink" title="四、开始构建"></a>四、开始构建</h3><p>可以选择在客户端mac xcode内进行构建，或者mac xcode server内构建，若在xcode server内构建，并可以看到结果如图所示：<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server05.png" alt="Xcode Server构建"><br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/xcode-server06.png" alt=""></p>
+<h3 id="五、Jenkins-Gerrit-trigger配置"><a href="#五、Jenkins-Gerrit-trigger配置" class="headerlink" title="五、Jenkins Gerrit trigger配置"></a>五、Jenkins Gerrit trigger配置</h3><p>这里是在jenkins内配置Gerrit trigger，注意主要是为了Trigger job然后向xcode server 发起请求，让Xcode server开始构建，因而需要取消Jenkins trigger内的Verify+1和Verify-1操作。<br>触发Xcode server借助Xcode server官方Api。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">export</div><div class="line">bot_id=&quot;8941fe179c67939ab009907baa64e3cf&quot;</div><div class="line">curl -k -X POST https://10.8.2.53:20343/api/bots/$&#123;bot_id&#125;/integrations</div></pre></td></tr></table></figure>
+<h3 id="六、Xcode-Server内设置"><a href="#六、Xcode-Server内设置" class="headerlink" title="六、Xcode Server内设置"></a>六、Xcode Server内设置</h3><p>在Trigger内触发Xcode Server job之后，然后在bots内新建Pre-Integration Scripts and Post-Integration Scripts，是为了更新gerrit 当前commits，并且依据运行结果，进行Verify+1和Verify-1。<br>Pre-Integration Scripts</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">#!/bin/bash</div><div class="line">project_path=$(pwd)</div><div class="line">cd $&#123;project_path&#125;</div><div class="line"></div><div class="line">ssh -p 29418 xxx@xxx &apos;gerrit query label:Verified=0 project:&quot;xxx&quot;  status:</div><div class="line"> open limit:1 --current-patch-set&apos; &gt;~/Desktop/junk.txt</div><div class="line">export commit=`grep revision: ~/Desktop/junk.txt | grep -oE &apos;[^ ]+$&apos;`</div><div class="line">export ref=`grep ref: ~/Desktop/junk.txt | grep -oE &apos;[^ ]+$&apos;`</div><div class="line">git fetch &quot;ssh://xx@xxx:29418/xxx&quot; $ref &amp;&amp; git checkout FETCH_HEAD</div><div class="line">git checkout -b $commit</div><div class="line"></div><div class="line">ssh -p 29418 xx@xx  &apos;gerrit review -p &quot;xx&quot; -m &quot;Xcode Server Starting Test&quot; &apos;$commit</div></pre></td></tr></table></figure>
+<p>Post-Integration Scripts</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">project_path=$(pwd)</div><div class="line">cd $&#123;project_path&#125;</div><div class="line"></div><div class="line">export commit=`grep revision: ~/Desktop/junk.txt | grep -oE &apos;[^ ]+$&apos;`</div><div class="line">ssh -p 29418 xx@xx &apos;gerrit review -p &quot;testing/dummy&quot; -m &quot;Test from the script&quot; </div><div class="line">--verified +1 &apos;$commit</div></pre></td></tr></table></figure>
+<p>这就实现了Jenkins触发，然后Xcode server构建，结果反馈gerrit。</p>
 ]]></content>
     
     <summary type="html">
     
-      &lt;p&gt;今天记录为mac下终端命令行设置代理的过程，为了下载pod，为了下载pod，为了下载pod，参考了杨占领分享的北京同事写的，sxiaojian.com/2016/07/04/terminal-shadowsocks/，过程是类似的但是，我按照他的流程没有走通。。。不知道是哪
+      &lt;p&gt;持续集成测试工具在mac中有使用较为频繁的Xcode Server服务器，它号称集成了git版本管理和持续集成服务，而且还有文档管理的功能。如下图所示：&lt;br&gt;&lt;img src=&quot;https://raw.githubusercontent.com/diaojunxian/d
     
     </summary>
     
@@ -642,37 +736,6 @@
 &lt;p&gt;本篇总结fastlane gym打包和jenkins配置的相关问题。&lt;/p&gt;
 &lt;hr&gt;
 &lt;h3 id=&quot;一、fastlane-gym打包&quot;&gt;&lt;a href=&quot;#一、fastlane-gym打包&quot; class=&quot;headerlink&quot; title=&quot;一、fastla
-    
-    </summary>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>iOS自动化实践——jenkins持续集成(四)</title>
-    <link href="http://yoursite.com/2016/09/08/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94jenkins%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90-%E5%9B%9B/"/>
-    <id>http://yoursite.com/2016/09/08/iOS自动化实践——jenkins持续集成-四/</id>
-    <published>2016-09-08T06:04:16.000Z</published>
-    <updated>2016-09-08T06:33:20.000Z</updated>
-    
-    <content type="html"><![CDATA[<hr>
-<p>为了实现持续集成，今天简介一下如何在一台新的mac上搭建持续集成iOS测试的环境。</p>
-<hr>
-<h4 id="一、安装各种依赖"><a href="#一、安装各种依赖" class="headerlink" title="一、安装各种依赖"></a>一、安装各种依赖</h4><p>本服务是为了配合WebDrvierAgent以及fastlane打包，自动化UI测试，故先安装WebDriverAgent部分。先插一句需要升级系统和xcode。<br>1、升级brew<code>brew update</code><br>2、安装client端，python-wda。<br>3、安装pycharm<br>4、安装node<br>5、安装libusbmuxd工程。<a href="https://diaojunxian.github.io/2016/08/30/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94WebDriverAgent-%E4%B8%83/" target="_blank" rel="external">具体可见</a><br>6、安装WebDriverAgent工程。<a href="https://diaojunxian.github.io/2016/07/22/iOS%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E8%B7%B5%E2%80%94%E2%80%94WebDriverAgent-%E4%B8%80/" target="_blank" rel="external">具体可见</a></p>
-<h4 id="二、clone-gerrit代码到本地"><a href="#二、clone-gerrit代码到本地" class="headerlink" title="二、clone gerrit代码到本地"></a>二、clone gerrit代码到本地</h4><p>1、生成pub，使用命令<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ssh-keygen -t rsa -C &quot;邮箱账号&quot;</div></pre></td></tr></table></figure></p>
-<p>将生成的rsa获取到并加入gerrit设置内。<br>2、分别clone iOS工程和UI iOS测试脚本倒本地。</p>
-<h4 id="三、遇到的问题"><a href="#三、遇到的问题" class="headerlink" title="三、遇到的问题"></a>三、遇到的问题</h4><p>1、现象：配置环境变量通过vi ~/.bash_profile配置完毕以后，发现关闭终端重启之后，无法生效。<br>解决：之前使用mac的同事配置了zsh，故而不能生效。选择终端==》偏好设置==》通用==》Shell的打开方式==》选择<code>/bin/bash</code></p>
-<p>2、现象：使用pycharm无法执行pytest框架的测试用例。<br>解决：pytest.ini之前没有上传gerrit没有拉取到服务器，配置Options存在空格。</p>
-<hr>
-<p>后续还有fastlane打包等折腾的路要走。。。。。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;hr&gt;
-&lt;p&gt;为了实现持续集成，今天简介一下如何在一台新的mac上搭建持续集成iOS测试的环境。&lt;/p&gt;
-&lt;hr&gt;
-&lt;h4 id=&quot;一、安装各种依赖&quot;&gt;&lt;a href=&quot;#一、安装各种依赖&quot; class=&quot;headerlink&quot; title=&quot;一、安装各种依赖&quot;&gt;&lt;/a&gt;一、安
     
     </summary>
     
