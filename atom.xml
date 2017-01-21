@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-01-20T06:14:48.000Z</updated>
+  <updated>2017-01-21T03:42:06.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,48 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>持续集成(十八)——Samba搭建</title>
+    <link href="http://yoursite.com/2017/01/21/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90-%E5%8D%81%E5%85%AB-%E2%80%94%E2%80%94Samba%E6%90%AD%E5%BB%BA/"/>
+    <id>http://yoursite.com/2017/01/21/持续集成-十八-——Samba搭建/</id>
+    <published>2017-01-21T03:17:49.000Z</published>
+    <updated>2017-01-21T03:42:06.000Z</updated>
+    
+    <content type="html"><![CDATA[<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>起因是需要让产品在Axure生成的产品文档方便在内部共享，之前有很多的思路，最后还是走了最简单的一条路。在Linux上搭建一个Samba服务，让产品方便上传文档，开发查看通过自己写的Flask服务。</p>
+<h3 id="安装Samba"><a href="#安装Samba" class="headerlink" title="安装Samba"></a>安装Samba</h3><h4 id="1、安装"><a href="#1、安装" class="headerlink" title="1、安装"></a>1、安装</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">sudo apt-get update</div><div class="line">sudo apt-get install samba</div></pre></td></tr></table></figure>
+<h4 id="2、创建共享目录"><a href="#2、创建共享目录" class="headerlink" title="2、创建共享目录"></a>2、创建共享目录</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">sudo mkdir /var/share</div><div class="line">sudo chmod 777 /var/share</div></pre></td></tr></table></figure>
+<h4 id="3、修改Samba配置"><a href="#3、修改Samba配置" class="headerlink" title="3、修改Samba配置"></a>3、修改Samba配置</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sudo vim /etc/samba/smb.conf</div></pre></td></tr></table></figure>
+<p>在配置文件最后加上</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">[share]</div><div class="line">   path = /var/share</div><div class="line">   browseable = yes</div><div class="line">   writable = yes</div><div class="line">   public = no</div><div class="line">   writable = yes</div></pre></td></tr></table></figure>
+<blockquote>
+<p>小贴士：public的设置是确认用户是否需要输入密码</p>
+</blockquote>
+<p>设定<code>public=no</code>时候，设定访问用户：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">sudo adduser test</div><div class="line">sudo smbpasswd -a test</div></pre></td></tr></table></figure>
+<h4 id="4、启动Samba"><a href="#4、启动Samba" class="headerlink" title="4、启动Samba"></a>4、启动Samba</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"># 启动</div><div class="line">sudo /etc/init.d/smbd start</div><div class="line"># 重启</div><div class="line">sudo /etc/init.d/smbd restart</div><div class="line"># 关闭</div><div class="line">sudo /etc/init.d/smbd shutdown</div></pre></td></tr></table></figure>
+<h4 id="5、访问"><a href="#5、访问" class="headerlink" title="5、访问"></a>5、访问</h4><p>Win环境访问：在我的电脑中选择映射网络浏览器，然后输入：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">\\192.168.1.100\share</div></pre></td></tr></table></figure>
+<p>Mac环境访问：在<code>Finder</code>中选择菜单上的<code>前往</code>，然后选择<code>连接服务器</code>，然后输入，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">smb://192.168.1.100/share</div></pre></td></tr></table></figure>
+<h3 id="开发查看产品文档"><a href="#开发查看产品文档" class="headerlink" title="开发查看产品文档"></a>开发查看产品文档</h3><p>我是通过Flask写了一个服务，然后将地址映射到共享的目录，注意到<code>Axure</code>生成的<code>html</code>文件夹都存在一个<code>index.html</code>，然后点击<code>index.html</code>就可以直接查看整个文档。<br>具体代码实现为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div></pre></td><td class="code"><pre><div class="line">#coding=utf-8</div><div class="line">from __future__ import division</div><div class="line">from flask import request, session, g, send_file, url_for, abort, render_template, flash, jsonify, make_response, Response, redirect</div><div class="line">from werkzeug.utils import secure_filename</div><div class="line">from werkzeug.exceptions import NotFound</div><div class="line">from flask import Flask, request, make_response, send_file, safe_join, redirect, Response</div><div class="line">import sys, os, cgi, urllib, posixpath, argparse</div><div class="line">from StringIO import StringIO</div><div class="line">from pypinyin import lazy_pinyin</div><div class="line">import commands</div><div class="line">import json</div><div class="line"></div><div class="line"></div><div class="line">def init_router(app):</div><div class="line">    def show_directory(path):</div><div class="line">        list = os.listdir(path)</div><div class="line">        list.sort(key=lambda a: a.lower())</div><div class="line"></div><div class="line">        list = eval(json.dumps(list, ensure_ascii=False))</div><div class="line">        f = StringIO()</div><div class="line">        print path</div><div class="line">        path = str(path).strip(&quot;.&quot;)</div><div class="line">        displaypath = cgi.escape(path)</div><div class="line">        f.write(&apos;&lt;!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 3.2 Final//EN&quot;&gt;&apos;)</div><div class="line">        f.write(&quot;&lt;html&gt;\n&lt;title&gt;产品文档&lt;/title&gt;\n&quot;)</div><div class="line">        encoding = sys.getfilesystemencoding()</div><div class="line">        f.write(&apos;&lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset=%s&quot;&gt;&apos; % encoding)</div><div class="line">        f.write(&quot;&lt;body&gt;\n&lt;h2&gt;最新产品文档列表&lt;/h2&gt;\n&quot;)</div><div class="line">        f.write(&quot;&lt;hr&gt;\n&lt;ul&gt;\n&quot;)</div><div class="line"></div><div class="line">        for name in list:</div><div class="line">            fullname = path + name</div><div class="line">            displayname = linkname = name</div><div class="line">            if os.path.splitext(name)[1] in app.config[&quot;IGNORED&quot;]:</div><div class="line">                continue</div><div class="line">            if name in app.config[&quot;IGNORED&quot;]:</div><div class="line">                continue</div><div class="line">            if os.path.isdir(fullname):</div><div class="line">                displayname = name + &quot;/&quot;</div><div class="line">                linkname = name + &quot;/&quot;</div><div class="line">            if os.path.islink(fullname):</div><div class="line">                displayname = name + &quot;@&quot;</div><div class="line">            if os.path.isdir(path + &quot;/&quot;+name):</div><div class="line">                if &quot;index.html&quot; in os.listdir(path + &quot;/&quot;+name):</div><div class="line">                    linkname = name + &quot;/index.html&quot;</div><div class="line">                    f.write(&apos;&lt;li&gt;&lt;a href=&quot;%s&quot;&gt;%s&lt;/a&gt;\n&apos;</div><div class="line">                            % (urllib.quote(linkname), cgi.escape(displayname)))</div><div class="line">            else:</div><div class="line">                f.write(&apos;&lt;li&gt;&lt;a href=&quot;%s&quot;&gt;%s&lt;/a&gt;\n&apos;</div><div class="line">                        % (urllib.quote(name), cgi.escape(displayname)))</div><div class="line">        f.write(&quot;&lt;/ul&gt;\n&lt;hr&gt;\n&lt;/body&gt;\n&lt;/html&gt;\n&quot;)</div><div class="line">        length = f.tell()</div><div class="line">        f.seek(0)</div><div class="line">        resp = make_response(f.read())</div><div class="line">        return resp</div><div class="line"></div><div class="line">    @app.route(&apos;/&lt;path:filename&gt;&apos;)</div><div class="line">    @app.route(&apos;/&apos;, methods=[&apos;POST&apos;, &apos;GET&apos;])</div><div class="line">    def show_file(filename=&apos;&apos;):</div><div class="line">        global ROOT_DIR</div><div class="line">        ROOT_DIR = os.path.abspath(&apos;../../../share/&apos;)</div><div class="line">        print ROOT_DIR</div><div class="line">        if request.method == &apos;GET&apos;:</div><div class="line">            filename = safe_join(ROOT_DIR, &quot;out_put/&quot;+filename)</div><div class="line">            print filename</div><div class="line"></div><div class="line">            if os.path.isdir(filename):</div><div class="line">                return show_directory(filename)</div><div class="line">            if not os.path.isfile(filename):</div><div class="line">                raise NotFound()</div><div class="line">            return send_file(filename, as_attachment=False)</div><div class="line">    @app.before_request</div><div class="line">    def before_request():</div><div class="line">        create_path()</div><div class="line"></div><div class="line">    @app.after_request</div><div class="line">    def after_request(response):</div><div class="line">        return response</div><div class="line"></div><div class="line">    @app.errorhandler(404)</div><div class="line">    def url_not_found(error):</div><div class="line">        &quot;&quot;&quot;重新定义404报错&quot;&quot;&quot;</div><div class="line">        return make_response(jsonify(&#123;&apos;error&apos;: &apos;URL occurs errors&apos;&#125;), 404)</div><div class="line"></div><div class="line">    @app.errorhandler(400)</div><div class="line">    def params_not_found(error):</div><div class="line">        &quot;&quot;&quot;重新定义400报错&quot;&quot;&quot;</div><div class="line">        return make_response(jsonify(&#123;&apos;error&apos;: &apos;Params occurs errors&apos;&#125;), 400)</div><div class="line"></div><div class="line">    def get_locale():</div><div class="line">        return request.accept_languages.best_match(app.config[&apos;LANGUAGES&apos;].keys())</div><div class="line"></div><div class="line">    def allowed_file(filename):</div><div class="line">        return &apos;.&apos; in filename and filename.rsplit(&apos;.&apos;, 1)[1] in app.config[&apos;ALLOWED_EXTENSIONS&apos;]</div><div class="line"></div><div class="line">    def create_path():</div><div class="line">        upload_path = app.config[&quot;UPLOAD_FOLDER&quot;]</div><div class="line">        if not os.path.exists(upload_path):</div><div class="line">            os.makedirs(upload_path)</div></pre></td></tr></table></figure>
+<h4 id="开发查看"><a href="#开发查看" class="headerlink" title="开发查看"></a>开发查看</h4><p>将<code>Flask</code>的服务部署到和共享文档同在的<code>Linux</code>机器上。</p>
+<blockquote>
+<p>小贴士：注意文件路径。</p>
+</blockquote>
+<p>通过<code>Supervisord</code>部署好之后，开发查看产品文档就非常方便，只需要知道<code>Flask</code>服务的<code>ip</code>和<code>port</code>即可，实现了局域网内共享。类如我们本地配置好的，:<code>http://192.168.1.100:8001</code></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>1、配置Samba共享服务<br>2、通过Flask写的服务查看</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h3 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h3&gt;&lt;p&gt;起因是需要让产品在Axure生成的产品文档方便在内部共享，之前有很多的思路，最后还是走了最简单的一条路。在Linux上搭建一个Samba服务
+    
+    </summary>
+    
+    
+  </entry>
   
   <entry>
     <title>持续集成实施(十七)——Fastlane总结</title>
@@ -758,35 +800,6 @@
       &lt;p&gt;其实在前期已经投入精力对持续集成进行部署，但是真正的困难不是部署应该走的方向，却是过程中发生的一个个的“坑”，如何对待这些拦路虎并跨过他们，记述一二。&lt;/p&gt;
 &lt;hr&gt;
 &lt;h3 id=&quot;一、iOS集成&quot;&gt;&lt;a href=&quot;#一、iOS集成&quot; class=&quot;headerlin
-    
-    </summary>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>Charles抓包指南</title>
-    <link href="http://yoursite.com/2016/09/20/Charles%E6%8A%93%E5%8C%85%E6%8C%87%E5%8D%97/"/>
-    <id>http://yoursite.com/2016/09/20/Charles抓包指南/</id>
-    <published>2016-09-20T01:38:03.000Z</published>
-    <updated>2016-09-20T06:01:05.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>写在前面，本来特别想吐槽的，之前用charles很正常的，昨天临时急用的时候，又不能抓包了，今早有时间整理一下文档。<br><em>Charles版本号:</em><code>V4.0</code>【当前官网最新版本】<br>需要实现的是，可以通过charles代理，抓取HTTPS的信息。</p>
-<hr>
-<h3 id="一、步骤"><a href="#一、步骤" class="headerlink" title="一、步骤"></a>一、步骤</h3><h4 id="1、安装Charles"><a href="#1、安装Charles" class="headerlink" title="1、安装Charles"></a>1、安装Charles</h4><p>Charles下载地址：<code>https://www.charlesproxy.com/download/</code>。<br>破解jar包下载：<code>http://pan.baidu.com/s/1nvuAneL</code>，密码<code>sctc</code>。将下载的文件重命名为charles.jar并覆盖到Content-&gt;Java下即可完成破解(MAC)</p>
-<h4 id="2、打开设置基本参数"><a href="#2、打开设置基本参数" class="headerlink" title="2、打开设置基本参数"></a>2、打开设置基本参数</h4><p>我选择的是mac版本的，下载安装好之后，打开Proxy——Proxy Settings…——Proxies——HTTP Proxy里的Port，就是代理的端口，是与手机端一致（比如这里默认8888）——勾选Enable transparent HTTP proxying</p>
-<h4 id="3、手机连接wifi，并且设置手动代理"><a href="#3、手机连接wifi，并且设置手动代理" class="headerlink" title="3、手机连接wifi，并且设置手动代理"></a>3、手机连接wifi，并且设置手动代理</h4><p>（ip为当前电脑，端口是上面设置的8888） 此时，手机打开一个url，已经可以实现初步抓包！下面接着把https的配置好。</p>
-<h4 id="4、接着配置电脑上charles的ssl"><a href="#4、接着配置电脑上charles的ssl" class="headerlink" title="4、接着配置电脑上charles的ssl"></a>4、接着配置电脑上charles的ssl</h4><p>Proxy——SSL Proxying Settings——SSL Proxying ——勾选Enable SSL Proxying——Locations里add一个Host和port（比如xxx-api.xxx.com, 443）(注意，这里先别填*:443, 下文会说明为什么）​，现在最重要的是两个证书。</p>
-<h4 id="5、电脑端的证书"><a href="#5、电脑端的证书" class="headerlink" title="5、电脑端的证书"></a>5、电脑端的证书</h4><p>Help——SSL Proxying——Install Charles Root Certificate,如图所示<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/ssl_pc.png" width="600" height="400" alt="直接安装不可行" align="center"><br>但是发现提示安装不了，这个时候，发现可以通过<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/ssl_pc_save.png" width="600" height="400" alt="先保存后安装" align="center"><br>可保存为默认名字<code>charles-ssl-proxying-certificate.cer</code>。然后拖入钥匙串，分别拖入钥匙串的登录和系统，并且都选择信任。<br><img src="https://raw.githubusercontent.com/diaojunxian/diaojunxian.github.io/master/images/cert.png" width="600" height="400" alt="拖入钥匙串选择信任" align="center"></p>
-<h4 id="6、手机端证书"><a href="#6、手机端证书" class="headerlink" title="6、手机端证书"></a>6、手机端证书</h4><p>在safari输入<code>http://www.charlesproxy.com/getssl/</code>，下载安装即可。</p>
-<h4 id="7、最后一步"><a href="#7、最后一步" class="headerlink" title="7、最后一步"></a>7、最后一步</h4><p>记得前面说过的<em>：443吗，对，这时就可以改为</em>：443了，手机端，电脑，都可以访问任意https而畅通无阻。（如果前面就设置了，就会出现，手机访问xxx-api.xxx.com正常，而电脑访问一些https的资源时，就有问题……我就是刷着知乎，发现样式全丢了，一看charles，全部报红叉）。</p>
-<hr>
-<p>就写这么多，至于Charles使用方法，可以自行百度了。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;写在前面，本来特别想吐槽的，之前用charles很正常的，昨天临时急用的时候，又不能抓包了，今早有时间整理一下文档。&lt;br&gt;&lt;em&gt;Charles版本号:&lt;/em&gt;&lt;code&gt;V4.0&lt;/code&gt;【当前官网最新版本】&lt;br&gt;需要实现的是，可以通过charles代理，抓取H
     
     </summary>
     
